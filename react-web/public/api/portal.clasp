@@ -1,0 +1,16 @@
+<%@status code="200" text="OK"%>
+<%@header name="Content-Type" value="application/json"%><%
+    char ssid[65];
+    char ssid_enc[129];
+    char pass[129];
+    char pass_enc[257];
+    ssid_enc[0]='\0';
+    pass_enc[0]='\0';
+    if(net_get_stored_credentials(ssid,64,pass,128)) {
+        json_string_encode(ssid,ssid_enc,128);
+        json_string_encode(pass,pass_enc,256);
+    }
+%>{
+    "ssid": "<%=ssid_enc%>",
+    "pass": "<%=pass_enc%>"
+}
