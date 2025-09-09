@@ -3,3 +3,4 @@
 
 bool ui_captive_portal_init();
 bool ui_captive_portal_setup(const char* address, const char* ssid, const char* pass);
+void ui_captive_portal_end();

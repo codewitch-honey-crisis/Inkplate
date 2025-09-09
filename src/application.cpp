@@ -22,28 +22,42 @@ extern "C" void run(void) {
         puts("Display init failed");
         return;
     }
-    if(!captive_portal_init()) {
-        puts("Error initializing captive portal");
+    if(net_init()) {
+        while(net_status()==NET_WAITING) {
+            timing_delay_ms(5);
+        }
+        if(net_status()!=NET_CONNECTED) {
+            puts("Could not connect to network");    
+        }
+    } else {
+        puts("Could not initialize network");
+    }
+    if(net_status()!=NET_CONNECTED) {
+        net_end();
+        if(!captive_portal_init()) {
+            puts("Error initializing captive portal");
+            return;        
+        }
         
-    }
-    char ssid[65];
-    char pass[129];
-    char address[129];
-    if(!captive_portal_get_credentials(ssid,sizeof(ssid),pass,sizeof(pass))) {
-        puts("captive portal get creds failed");
-        return;
-    }
-    if(!captive_portal_get_address(address,sizeof(address))) {
-        puts("captive portal get address failed");
-        return;
-    }
-    if(!ui_captive_portal_init()) {
-        puts("ui init failed");
-        return;
-    }
-    if(!ui_captive_portal_setup(address,ssid,pass)) {
-        puts("ui setup failed");
-        return;
+        char ssid[65];
+        char pass[129];
+        char address[129];
+        if(!captive_portal_get_credentials(ssid,sizeof(ssid),pass,sizeof(pass))) {
+            puts("captive portal get creds failed");
+            return;
+        }
+        if(!captive_portal_get_address(address,sizeof(address))) {
+            puts("captive portal get address failed");
+            return;
+        }
+        if(!ui_captive_portal_init()) {
+            puts("ui init failed");
+            return;
+        }
+        if(!ui_captive_portal_setup(address,ssid,pass)) {
+            puts("ui setup failed");
+            return;
+        }
     }
 }
 extern "C" void loop(void) {

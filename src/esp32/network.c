@@ -100,20 +100,25 @@ bool net_init() {
     }  
 
     if(ESP_OK!=nvs_flash_init()) {
+        ESP_LOGE(TAG,"NVS flash init failed");
         return false;
     }
     
     wifi_event_group = xEventGroupCreate();
     if(wifi_event_group==NULL) {
+        ESP_LOGE(TAG,"Event group create failed");
         return false;
     }
+    
     if(ESP_OK!=esp_netif_init()) {
+        ESP_LOGE(TAG,"netif init failed");
         vEventGroupDelete(wifi_event_group);
         wifi_event_group=NULL;
         return false;
     }
 
     if(ESP_OK!=esp_event_loop_create_default()) {
+        ESP_LOGE(TAG,"event loop default create failed");
         esp_netif_deinit();
         vEventGroupDelete(wifi_event_group);
         wifi_event_group=NULL;
@@ -121,6 +126,7 @@ bool net_init() {
     }
     wifi_sta=esp_netif_create_default_wifi_sta();
     if(NULL==wifi_sta) {
+        ESP_LOGE(TAG,"create default wifi sta failed");
         esp_netif_deinit();
         vEventGroupDelete(wifi_event_group);
         wifi_event_group=NULL;
@@ -129,6 +135,7 @@ bool net_init() {
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     if(ESP_OK!=esp_wifi_init(&cfg)) {
+        ESP_LOGE(TAG,"wifi init failed");
         esp_netif_deinit();
         vEventGroupDelete(wifi_event_group);
         wifi_event_group=NULL;
@@ -140,17 +147,20 @@ bool net_init() {
     if(ESP_OK!=esp_event_handler_instance_register(
         WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL,
         &instance_any_id)) {
+            ESP_LOGE(TAG,"event handler 1 registration failed");
         goto error;
     }
     if(ESP_OK!=esp_event_handler_instance_register(
         IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL,
         &instance_got_ip)) {
+            ESP_LOGE(TAG,"event handler 2 registration failed");
         goto error;
         
     }
     if(ESP_OK!=esp_event_handler_instance_register(
         IP_EVENT, IP_EVENT_STA_LOST_IP, &wifi_event_handler, NULL,
         &instance_lost_ip)) {
+            ESP_LOGE(TAG,"event handler 3 registration failed");
         goto error;
         
     }
@@ -162,12 +172,15 @@ bool net_init() {
     wifi_config.sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH;
     // wifi_config.sta.sae_h2e_identifier[0]=0;
     if(ESP_OK!=esp_wifi_set_mode(WIFI_MODE_STA)) {
+        ESP_LOGE(TAG,"wifi set mode failed");
         goto error;
     }
     if(ESP_OK!=esp_wifi_set_config(WIFI_IF_STA, &wifi_config)) {
+        ESP_LOGE(TAG,"wifi set config failed");
         goto error;
     }
     if(ESP_OK!=esp_wifi_start()) {
+        ESP_LOGE(TAG,"wifi start failed");
         goto error;
     }
     return true;

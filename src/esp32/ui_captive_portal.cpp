@@ -84,7 +84,14 @@ error:
     setup_screen.unregister_controls();
     return false;
 }
-
+void ui_captive_portal_end() {
+    if(xfer_buffer==nullptr) {
+        return;
+    }
+    setup_screen.unregister_controls();
+    free(xfer_buffer);
+    xfer_buffer = nullptr;
+}
 bool ui_captive_portal_setup(const char* address, const char* ssid, const char* pass) {
     if(xfer_buffer==NULL) return false;
     //WIFI:S:<SSID>;T:<WPA|WEP|>;P:<password>;
