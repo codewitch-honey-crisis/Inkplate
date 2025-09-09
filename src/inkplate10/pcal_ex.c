@@ -169,17 +169,17 @@ bool read_register(uint8_t addr, uint8_t reg, uint8_t *k)
     return true;
 }
 
-static bool update_all_registers(uint8_t addr, uint8_t *k)
-{
-    uint8_t tmp[24];
-    memcpy(tmp+1,k,23);
-    tmp[0]=0;
-    if(!i2c_write(addr,tmp,sizeof(tmp))) {
-        ESP_LOGE(TAG, "Could not write registers");
-        return false;
-    }
-    return true;
-}
+// static bool update_all_registers(uint8_t addr, uint8_t *k)
+// {
+//     uint8_t tmp[24];
+//     memcpy(tmp+1,k,23);
+//     tmp[0]=0;
+//     if(!i2c_write(addr,tmp,sizeof(tmp))) {
+//         ESP_LOGE(TAG, "Could not write registers");
+//         return false;
+//     }
+//     return true;
+// }
 static bool update_register(uint8_t addr, uint8_t reg, uint8_t value) {
     uint8_t tmp[2];
     tmp[0] = regAddresses[reg];
@@ -190,16 +190,16 @@ static bool update_register(uint8_t addr, uint8_t reg, uint8_t value) {
     }
     return true;
 }
-static bool update_register2(uint8_t addr, uint8_t reg, uint8_t* k, uint8_t count) {
-    uint8_t tmp[24];
-    tmp[0] = regAddresses[reg];
-    memcpy(tmp+1,&k[reg],count);
-    if (!i2c_write(addr,tmp, sizeof(tmp))) {
-        ESP_LOGE(TAG, "Could not write register");
-        return false;
-    }
-    return true;
-}
+// static bool update_register2(uint8_t addr, uint8_t reg, uint8_t* k, uint8_t count) {
+//     uint8_t tmp[24];
+//     tmp[0] = regAddresses[reg];
+//     memcpy(tmp+1,&k[reg],count);
+//     if (!i2c_write(addr,tmp, sizeof(tmp))) {
+//         ESP_LOGE(TAG, "Could not write register");
+//         return false;
+//     }
+//     return true;
+// }
 static uint8_t *get_internal_registers(uint8_t addr)
 {
     return (addr == IO_INT_ADDR ? ioRegsInt : ioRegsEx);

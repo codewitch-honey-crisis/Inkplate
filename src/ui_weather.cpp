@@ -178,13 +178,13 @@ bool ui_weather_fetch() {
     if(status>=200 && status<=299) {
         http_stream stm(handle);
         json_reader_ex<64> reader(stm);
-        time_t last_update;
-        float temp_c=0, feels_c=0, wind_kph=0, precip_mm=0, vis_km=0, gust_kph=0;
+        //time_t last_update;
+        float temp_c=0, feels_c=0, wind_kph=0, precip_mm=0, gust_kph=0;
         int humidity=0, cloud=0;
         char wind_dir[16];
-        char wind_gust[16];
+        //char wind_gust[16];
         wind_dir[0]='\0';
-        wind_gust[0]='\0';
+        //wind_gust[0]='\0';
         int state = J_START; 
         bool success = false;
         while(reader.read()) {
@@ -206,8 +206,6 @@ bool ui_weather_fetch() {
                         success = true;
                         if(0==strcmp("text",reader.value()) && reader.read()) {
                             strcpy(weather_info.condition,reader.value());
-                        } else if(0==strcmp("last_updated_epoch",reader.value()) && reader.read()) {
-                            last_update = (time_t)reader.value_int();
                         } else if(0==strcmp("is_day",reader.value()) && reader.read()) {
                             weather_info.is_day = reader.value_bool();
                         } else if(0==strcmp("temp_c",reader.value()) && reader.read()) {
@@ -224,8 +222,6 @@ bool ui_weather_fetch() {
                             humidity = reader.value_int();
                         } else if(0==strcmp("cloud",reader.value()) && reader.read()) {
                             cloud = reader.value_int();
-                        } else if(0==strcmp("vis_km",reader.value()) && reader.read()) {
-                            vis_km = reader.value_real();
                         } else if(0==strcmp("gust_kph",reader.value()) && reader.read()) {
                             gust_kph = reader.value_real();
                         }
