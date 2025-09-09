@@ -1,4 +1,5 @@
 #include "display.h"
+#include "task.h"
 #include "timing.h"
 #include "fs.h"
 #ifdef ESP_PLATFORM
@@ -34,6 +35,7 @@ extern "C" void run(void) {
     }
     if(net_status()!=NET_CONNECTED) {
         net_end();
+#ifdef ESP_PLATFORM
         if(!captive_portal_init()) {
             puts("Error initializing captive portal");
             return;        
@@ -59,7 +61,11 @@ extern "C" void run(void) {
             return;
         }
     }
+#else
+    puts("Network initialization failure.");
+    return;
+#endif
 }
 extern "C" void loop(void) {
-      vTaskDelay(5);  
+      task_delay(5);
 }
