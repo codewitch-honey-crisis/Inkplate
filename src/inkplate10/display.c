@@ -580,7 +580,7 @@ bool display_init(void) {
     } else {
         memcpy(waveform3Bit, waveformStored.waveform, sizeof(waveform3Bit));
     }
-
+    waveformStored.waveformId = INKPLATE10_WAVEFORM1;
     for (uint32_t i = 0; i < 256; ++i)
         pinLUT[i] = ((i & 0b00000011) << 4) | (((i & 0b00001100) >> 2) << 18) | (((i & 0b00010000) >> 4) << 23) |
                     (((i & 0b11100000) >> 5) << 25);
