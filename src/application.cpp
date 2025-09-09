@@ -3,6 +3,8 @@
 #include "timing.h"
 #include "fs.h"
 #ifdef ESP_PLATFORM
+#include "rtc_wdt.h"
+#include "esp_task_wdt.h"
 #include "esp32/captive_portal.h"
 #include "esp32/ui_captive_portal.hpp"
 #endif
@@ -73,7 +75,8 @@ extern "C" void run(void) {
             return;
         }
         while(true) {
-            vTaskDelay(5);
+            rtc_wdt_feed();
+            task_delay(5);
             int conn = dhcp_connected;
             if(conn!=dhcp_connected_old) {
                 dhcp_connected_old  = conn;
