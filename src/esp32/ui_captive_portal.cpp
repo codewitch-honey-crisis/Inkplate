@@ -50,7 +50,6 @@ bool ui_captive_portal_init() {
     setup_label.bounds(srect16(0,0,setup_screen.bounds().x2,fheight+1));
     setup_label.font(text_font);
     setup_label.color(ucolor_t::black);
-    setup_label.text("Configure device");
     setup_screen.register_control(setup_label);
     setup_qr.bounds(srect16(spoint16::zero(),ssize16(screen_dimensions.width/4,screen_dimensions.width/4)).center_horizontal(setup_screen.bounds()).offset(0,fheight+2));
         
@@ -92,8 +91,9 @@ void ui_captive_portal_end() {
     free(xfer_buffer);
     xfer_buffer = nullptr;
 }
-bool ui_captive_portal_setup(const char* address, const char* ssid, const char* pass) {
+bool ui_captive_portal_set_ap(const char* address, const char* ssid, const char* pass) {
     if(xfer_buffer==NULL) return false;
+    setup_label.text("Connect to AP");
     //WIFI:S:<SSID>;T:<WPA|WEP|>;P:<password>;
     strcpy(setup_qr_creds,"WIFI:S:");
     strcat(setup_qr_creds,ssid);
@@ -110,6 +110,15 @@ bool ui_captive_portal_setup(const char* address, const char* ssid, const char* 
     setup_screen.invalidate();
     setup_screen.update();
     bool res= display_update_1bit();
+    return res;
+}
+bool ui_captive_portal_set_url(const char* address) {
+    if(xfer_buffer==NULL) return false;
+    setup_label.text("Configure device");
+    setup_qr.text(address);
+    setup_screen.invalidate();
+    setup_screen.update();
+    bool res= display_partial_update_1bit();
     return res;
 }
 #endif

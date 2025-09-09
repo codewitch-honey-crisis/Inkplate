@@ -14,7 +14,21 @@
 #include "ui.hpp"
 using namespace gfx;
 using namespace uix;
+#ifdef ESP_PLATFORM
+char ssid[65];
+char pass[129];
+char address[129];
 
+static volatile int dhcp_connected = 0;
+static int dhcp_connected_old = -1;
+static void portal_on_connect(void* state) {
+    dhcp_connected = 1;
+
+}
+static void portal_on_disconnect(void* state) {
+    dhcp_connected = 0;
+}
+#endif
 extern "C" void run(void) {
     if(!fs_internal_init()) {
         puts("FS init failed");
@@ -36,14 +50,12 @@ extern "C" void run(void) {
     if(net_status()!=NET_CONNECTED) {
         net_end();
 #ifdef ESP_PLATFORM
+        captive_portal_on_sta_connect(portal_on_connect,nullptr);
+        captive_portal_on_sta_disconnect(portal_on_disconnect,nullptr);
         if(!captive_portal_init()) {
             puts("Error initializing captive portal");
             return;        
         }
-        
-        char ssid[65];
-        char pass[129];
-        char address[129];
         if(!captive_portal_get_credentials(ssid,sizeof(ssid),pass,sizeof(pass))) {
             puts("captive portal get creds failed");
             return;
@@ -56,9 +68,30 @@ extern "C" void run(void) {
             puts("ui init failed");
             return;
         }
-        if(!ui_captive_portal_setup(address,ssid,pass)) {
-            puts("ui setup failed");
+        if(!ui_captive_portal_set_ap(address,ssid,pass)) {
+            puts("ui update failed");
             return;
+        }
+        while(true) {
+            vTaskDelay(5);
+            int conn = dhcp_connected;
+            if(conn!=dhcp_connected_old) {
+                dhcp_connected_old  = conn;
+                if(conn) {
+                    if(!ui_captive_portal_set_url(address)) {
+                        puts("ui update failed");
+                        return;
+                    }
+                } else {
+                    if(!ui_captive_portal_set_ap(address,ssid,pass)) {
+                        puts("ui update failed");
+                        return;
+                    }
+                }
+            }
+            
+            
+            
         }
     }
 #else

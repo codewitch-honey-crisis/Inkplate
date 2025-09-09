@@ -224,7 +224,6 @@ static bool dhcp_set_captiveportal_url(void) {
 
     // get a handle to configure DHCP with
     esp_netif_t* netif = esp_netif_get_handle_from_ifkey("WIFI_AP_DEF");
-
     // set the DHCP option 114
     ESP_ERROR_CHECK_WITHOUT_ABORT(esp_netif_dhcps_stop(netif));
     if (ESP_OK != esp_netif_dhcps_option(netif, ESP_NETIF_OP_SET, ESP_NETIF_CAPTIVEPORTAL_URI, captive_portal_uri, strlen(captive_portal_uri))) {
@@ -391,6 +390,44 @@ void captive_portal_end(void) {
         captive_portal_uri = NULL;
     }
 }
+static captive_portal_callback_t captive_portal_on_sta_connect_fn = NULL;
+static void* captive_portal_on_sta_connect_state = NULL;
+void captive_portal_on_sta_connect(captive_portal_callback_t callback, void* state) {
+    captive_portal_on_sta_connect_fn = callback;
+    captive_portal_on_sta_connect_state = state;
+}
+static captive_portal_callback_t captive_portal_on_sta_disconnect_fn = NULL;
+static void* captive_portal_on_sta_disconnect_state = NULL;
+void captive_portal_on_sta_disconnect(captive_portal_callback_t callback, void* state) {
+    captive_portal_on_sta_disconnect_fn = callback;
+    captive_portal_on_sta_disconnect_state = state;
+}
+
+static wifi_sta_list_t dhcp_sta_list;
+void dhcp_monitor(void* arg) {
+    bool connected = false;
+    while(dns_handle!=NULL) {
+        vTaskDelay(5);
+        if(ESP_OK==esp_wifi_ap_get_sta_list(&dhcp_sta_list)) {
+            if(dhcp_sta_list.num>0) {
+                if(!connected) {
+                    connected = true;
+                    if(captive_portal_on_sta_connect_fn!=NULL) {
+                        captive_portal_on_sta_connect_fn(captive_portal_on_sta_connect_state);
+                    }
+                }
+            } else {
+                if(connected) {
+                    connected = false;
+                    if(captive_portal_on_sta_disconnect_fn!=NULL) {
+                        captive_portal_on_sta_disconnect_fn(captive_portal_on_sta_disconnect_state);
+                    }
+                }
+            }
+        }
+    }
+    vTaskDelete(NULL);
+}
 bool captive_portal_init(void) {
     if(dns_handle!=NULL) {
         return true;
@@ -450,6 +487,11 @@ bool captive_portal_init(void) {
     dns_handle = start_dns_server(&config);
     if(dns_handle==NULL) {
         ESP_LOGE(TAG,"DNS init failed");
+        goto error;
+    }
+    TaskHandle_t th;
+    xTaskCreate(dhcp_monitor,"dhcp_monitor",4096,NULL,10,&th);
+    if(th==NULL) {
         goto error;
     }
     return true;

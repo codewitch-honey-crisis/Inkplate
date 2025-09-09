@@ -2,11 +2,14 @@
 #define CAPTIVE_PORTAL_H
 #include <stdbool.h>
 #include <stddef.h>
+typedef void(*captive_portal_callback_t)(void*);
 #ifdef __cplusplus
 extern "C" {
 #endif
 bool captive_portal_init(void);
 void captive_portal_end(void);
+void captive_portal_on_sta_connect(captive_portal_callback_t callback, void* state);
+void captive_portal_on_sta_disconnect(captive_portal_callback_t callback, void* state);
 /// @brief Retrieves the address of the device
 /// @param out_address A buffer to hold the address
 /// @param out_address_length The length of the address buffer
