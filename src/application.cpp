@@ -62,7 +62,7 @@ extern "C" void run(void) {
         }
     }
 #else
-    puts("Network initialization failure.");
+    puts("Network connection failure.");
     return;
 #endif
 }
