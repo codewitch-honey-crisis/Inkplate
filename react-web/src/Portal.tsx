@@ -49,6 +49,7 @@ const Configuration = () => {
     return (<>
         <label>SSID:</label><input type="text" name="ssid" defaultValue={cfg.ssid} /><br />
         <label>Password:</label><input type="text" name="pass" defaultValue={cfg.pass} /><br />
+        <label>Location (geo coords or zip/postal US/UK/CA)</label><input type="text" name="location" /><br />
         <label>Timezone:</label><Timezones/>
     </>)
 }

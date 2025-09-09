@@ -13,7 +13,7 @@
 #include "httpd_application.h"
 #define HTTPD_CONTENT_IMPLEMENTATION
 #include "httpd_content.h"
-#include "ui.hpp"
+#include "ui_weather.hpp"
 using namespace gfx;
 using namespace uix;
 #ifdef ESP_PLATFORM
@@ -102,12 +102,28 @@ extern "C" void run(void) {
                 }
             }
         }
-    }
+    
 #else
-    puts("Network connection failure.");
-    return;
+        puts("Network connection failure.");
+        return;
 #endif
+    }
+    if(!ui_weather_init()) {
+        puts("Could not initialize weather UI.");
+        while(1) {
+            task_delay(5);
+        }
+    }
 }
 extern "C" void loop(void) {
-      task_delay(5);
+    static uint32_t ts = 0;
+    if(net_status()==NET_CONNECTED) {
+        if(ts==0 || timing_get_ms()>=ts+300*1000) {
+            //ts=timing_get_ms();
+            if(!ui_weather_fetch()) {
+                puts("Could not fetch weather");
+            }
+        }
+    }
+    task_delay(5);
 }

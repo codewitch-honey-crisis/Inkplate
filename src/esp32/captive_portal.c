@@ -245,11 +245,13 @@ static void parse_url_and_apply(const char* url) {
     char pass[64];
     pass[0]='\0';
     char tz[64];
+    char location[64];
     char name[64];
     char value[64];
     bool restart = false;
     bool set_creds = false;
     bool set_tz = false;
+    bool set_location = false;
     if (query != NULL) {
         while (1) {
             query = httpd_crack_query(query, name, value);
@@ -271,6 +273,11 @@ static void parse_url_and_apply(const char* url) {
                 restart = true;
                 strncpy(tz,value,63);
             }
+            if(0==strcmp("location",name)) {
+                set_location=true;
+                restart = true;
+                strncpy(location,value,63);
+            }
         }
     }
     
@@ -282,7 +289,13 @@ static void parse_url_and_apply(const char* url) {
         sscanf(tz,"%ld",&ofs);
         char buf[32];
         snprintf(buf,31,"%ld",ofs*3600);
+        config_clear_values("tzoffset");
         config_add_value("tzoffset",buf);
+        restart=true;
+    }
+    if(set_location) {
+        config_clear_values("location");
+        config_add_value("location",location);
         restart=true;
     }
     if(restart) {

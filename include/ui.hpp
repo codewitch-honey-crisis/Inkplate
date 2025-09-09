@@ -134,7 +134,7 @@ protected:
         // save the current transform
         gfx::matrix old = destination.transform();
         gfx::matrix m = gfx::matrix::create_identity();
-        m=m.translate(-m_label_text_bounds.x1,(-m_label_text_bounds.y1)+(0/*destination.dimensions().height-m_label_text_bounds.height()*/)*0.5f);
+        m=m.translate(-m_label_text_bounds.x1,(-m_label_text_bounds.y1));
         destination.transform(m);
         destination.path(m_label_text_path);
         destination.render();

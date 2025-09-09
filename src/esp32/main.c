@@ -3,7 +3,8 @@
 #include "rtc_wdt.h"
 extern void run(void);
 extern void loop(void);
-static void loop_task(void* arg) {
+void app_main(void) {
+    run();
     uint32_t ts = 0;
     while (1) {
         loop();
@@ -14,9 +15,4 @@ static void loop_task(void* arg) {
             
         }
     }
-}
-void app_main(void) {
-    run();
-    TaskHandle_t handle;
-    xTaskCreate(loop_task,"loop_task",8192,NULL,20,&handle);
 }

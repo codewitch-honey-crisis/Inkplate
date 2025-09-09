@@ -1,0 +1,287 @@
+#include "ui_weather.hpp"
+#include <time.h>
+#include <stdio.h>
+#include <string.h>
+#include "config.h"
+#include "display.h"
+#include "http.h"
+#include "http_stream.hpp"
+#include "json.hpp"
+#include "assets/connectivity.hpp"
+#include "assets/weather.hpp"
+using namespace gfx;
+using namespace uix;
+using namespace json;
+using label3_t = vlabel<surface3_t>;
+using icon3_t = icon_box<surface3_t>;
+
+typedef struct {
+    char area[64];
+    char last_updated[64];
+    bool use_imperial_units;
+    bool is_day;
+    char temp[64];
+    char condition[64];
+    char wind[64];
+    char humidity[16];
+    char precipitation[32];
+    char visibility[16];
+    char cloud_coverage[8];
+} weather_info_t;
+
+static screen3_t weather_screen;
+
+static char weather_location[256];
+static const char* weather_api_url_part= "http://api.weatherapi.com/v1/current.json?key=f188c23cb291489389755443221206&aqi=no&q=";
+static char weather_api_url[1025];
+static weather_info_t weather_info;
+static icon3_t weather_connected_icon;
+static icon3_t weather_icon;
+static label3_t weather_area_label;
+static label3_t weather_condition_label;
+
+static label3_t weather_temp_title_label;
+static label3_t weather_temp_label;
+static label3_t weather_wind_title_label;
+static label3_t weather_wind_label;
+static label3_t weather_precipitation_title_label;
+static label3_t weather_precipitation_label;
+static label3_t weather_humidity_title_label;
+static label3_t weather_humidity_label;
+
+bool ui_weather_init() {
+    weather_location[0]='\0';
+    // uix uses signed coords
+    weather_screen.update_mode(screen_update_mode::direct);
+    weather_screen.buffer_size(display_buffer_3bit_size());
+    weather_screen.buffer1(display_buffer_3bit());
+    weather_screen.dimensions((ssize16)screen_dimensions);
+    weather_screen.background_color(scolor3_t::white);
+    float fheight = screen_dimensions.width/8.f;
+    weather_icon.bounds(srect16(spoint16::zero(),ssize16(screen_dimensions.width/8,screen_dimensions.width/8)));
+    weather_icon.svg_size(connectivity_wifi_dimensions);
+    weather_icon.svg(connectivity_wifi);
+    weather_screen.register_control(weather_icon);
+
+    srect16 sr = weather_icon.bounds();
+    sr.offset_inplace(weather_icon.dimensions().width+2,0);
+    sr.y2/=2;
+    sr.y2-=1;
+    sr.x2 = weather_screen.bounds().x2;
+    weather_area_label.bounds(sr);
+    weather_area_label.font(text_font);
+    constexpr static const uint8_t L = .6666f * 255;
+    weather_area_label.color(rgba_pixel<32>(L,L,L,255));
+    weather_area_label.text("Fetching...");
+    weather_screen.register_control(weather_area_label);
+
+    sr.offset_inplace(0,sr.height()+2);
+    weather_condition_label.bounds(sr);
+    weather_condition_label.text("Fetching...");
+    weather_condition_label.font(text_font);
+    weather_condition_label.color(ucolor_t::black);
+    weather_screen.register_control(weather_condition_label);
+
+    sr = srect16(0,weather_icon.bounds().y2+2,weather_screen.bounds().x2/2-1,weather_icon.bounds().y2+2+(fheight/2));
+    weather_temp_title_label.bounds(sr);
+    weather_temp_title_label.background_color(rgba_pixel<32>(L,L,L,255));
+    weather_temp_title_label.font(text_font);
+    weather_temp_title_label.color(ucolor_t::white);
+    weather_temp_title_label.text("TEMPERATURE");
+    weather_screen.register_control(weather_temp_title_label);
+
+    sr.offset_inplace(sr.width()+2,0);
+    weather_wind_title_label.bounds(sr);
+    weather_wind_title_label.background_color(rgba_pixel<32>(L,L,L,255));
+    weather_wind_title_label.font(text_font);
+    weather_wind_title_label.color(ucolor_t::white);
+    weather_wind_title_label.text("WIND");
+    weather_screen.register_control(weather_wind_title_label);
+    
+    sr = weather_temp_title_label.bounds().offset(0,weather_temp_title_label.dimensions().height+1);
+    sr.y2+=(fheight/2);
+    weather_temp_label.bounds(sr);
+    weather_temp_label.text("Fetching...");
+    weather_temp_label.font(text_font);
+    weather_temp_label.color(ucolor_t::black);
+    weather_screen.register_control(weather_temp_label);
+
+    sr = weather_wind_title_label.bounds().offset(0,weather_wind_title_label.dimensions().height+1);
+    weather_wind_label.bounds(sr);
+    weather_wind_label.text("Fetching...");
+    weather_wind_label.font(text_font);
+    weather_wind_label.color(ucolor_t::black);
+    weather_screen.register_control(weather_wind_label);
+
+    sr = weather_temp_title_label.bounds();
+    int h = sr.height();
+    sr.y1 = weather_temp_label.bounds().y2+2;
+    sr.y2+=h-1;
+
+    weather_precipitation_title_label.bounds(sr);
+    weather_precipitation_title_label.text("PRECIPITATION");
+    weather_precipitation_title_label.font(text_font);
+    weather_precipitation_title_label.background_color(rgba_pixel<32>(L,L,L,255));
+    weather_precipitation_title_label.color(ucolor_t::white);
+    weather_screen.register_control(weather_precipitation_title_label);
+    
+    sr.offset_inplace(sr.width()+2,0);
+    weather_humidity_title_label.bounds(sr);
+    weather_humidity_title_label.text("HUMIDITY");
+    weather_humidity_title_label.font(text_font);
+    weather_humidity_title_label.background_color(rgba_pixel<32>(L,L,L,255));
+    weather_humidity_title_label.color(ucolor_t::white);
+    weather_screen.register_control(weather_humidity_title_label);
+    
+    sr = weather_precipitation_title_label.bounds().offset(0,weather_precipitation_title_label.dimensions().height+1);
+    weather_precipitation_label.bounds(sr);
+    weather_precipitation_label.text("Fetching...");
+    weather_precipitation_label.font(text_font);
+    weather_precipitation_label.color(ucolor_t::black);
+    weather_screen.register_control(weather_precipitation_label);
+    
+    sr = weather_humidity_title_label.bounds().offset(0,weather_humidity_title_label.dimensions().height+1);
+    weather_humidity_label.bounds(sr);
+    weather_humidity_label.text("Fetching...");
+    weather_humidity_label.font(text_font);
+    weather_humidity_label.color(ucolor_t::black);
+    if(uix_result::success!=weather_screen.register_control(weather_humidity_label)) {
+        weather_screen.unregister_controls();
+        return false;
+    }
+    return true;    
+}
+
+bool ui_weather_fetch() {
+    if(weather_screen.dimensions().width==0) {
+        return false;
+    }
+    if(weather_location[0]=='\0') {
+        if(!config_get_value("location",0,weather_location,sizeof(weather_location))) {
+            return false;
+        }
+        if(weather_location[0]=='\0') {
+            return false;
+        }
+        http_url_encode(weather_location,sizeof(weather_location),weather_location,http_enc_rfc3986);
+        strcpy(weather_api_url,weather_api_url_part);
+        strcat(weather_api_url,weather_location);
+    }
+    
+    http_handle_t handle = http_init(weather_api_url);
+    int status =  http_read_status_and_headers(handle);
+    enum {
+        J_START=0,
+        J_LOC,
+        J_CUR
+    };
+    if(status>=200 && status<=299) {
+        http_stream stm(handle);
+        json_reader_ex<64> reader(stm);
+        time_t last_update;
+        float temp_c=0, feels_c=0, wind_kph=0, precip_mm=0, vis_km=0, gust_kph=0;
+        int humidity=0, cloud=0;
+        char wind_dir[16];
+        char wind_gust[16];
+        wind_dir[0]='\0';
+        wind_gust[0]='\0';
+        int state = J_START; 
+        bool success = false;
+        while(reader.read()) {
+            if(reader.depth()==1) {
+                if(reader.node_type()==json_node_type::field && 0==strcmp("location",reader.value())) {
+                    state = J_LOC;
+                } else if(reader.node_type()==json_node_type::field && 0==strcmp("current",reader.value())) {
+                    state = J_CUR;
+                }
+            } else {
+                if(state==J_LOC) {
+                    if(reader.node_type()==json_node_type::field) {
+                        if(0==strcmp("name",reader.value()) && reader.read()) {
+                            strcpy(weather_info.area,reader.value());
+                        }
+                    }   
+                } else if(state==J_CUR) {
+                    if(reader.node_type()==json_node_type::field) {
+                        success = true;
+                        if(0==strcmp("text",reader.value()) && reader.read()) {
+                            strcpy(weather_info.condition,reader.value());
+                        } else if(0==strcmp("last_updated_epoch",reader.value()) && reader.read()) {
+                            last_update = (time_t)reader.value_int();
+                        } else if(0==strcmp("is_day",reader.value()) && reader.read()) {
+                            weather_info.is_day = reader.value_bool();
+                        } else if(0==strcmp("temp_c",reader.value()) && reader.read()) {
+                            temp_c = reader.value_real();
+                        } else if(0==strcmp("feelslike_c",reader.value()) && reader.read()) {
+                            feels_c = reader.value_real();
+                        } else if(0==strcmp("wind_kph",reader.value()) && reader.read()) {
+                            wind_kph = reader.value_real();
+                        } else if(0==strcmp("wind_dir",reader.value()) && reader.read()) {
+                            strcpy(wind_dir,reader.value());
+                        } else if(0==strcmp("precip_mm",reader.value()) && reader.read()) {
+                            precip_mm = reader.value_real();
+                        } else if(0==strcmp("humidity",reader.value()) && reader.read()) {
+                            humidity = reader.value_int();
+                        } else if(0==strcmp("cloud",reader.value()) && reader.read()) {
+                            cloud = reader.value_int();
+                        } else if(0==strcmp("vis_km",reader.value()) && reader.read()) {
+                            vis_km = reader.value_real();
+                        } else if(0==strcmp("gust_kph",reader.value()) && reader.read()) {
+                            gust_kph = reader.value_real();
+                        }
+                    }
+                }
+            }
+        }
+        http_end(handle);
+        if(success) {
+            weather_area_label.text(weather_info.area);
+            weather_condition_label.text(weather_info.condition);
+            sprintf(weather_info.temp,"%0.1fC (feels %0.1fC)",temp_c,feels_c);
+            weather_temp_label.text(weather_info.temp);
+            snprintf(weather_info.wind,sizeof(weather_info.wind),"%s %0.1fKPH (gust %0.1fKPH)",wind_dir,wind_kph,gust_kph);
+            weather_wind_label.text(weather_info.wind);
+            sprintf(weather_info.precipitation,"%0.1fmm",precip_mm);
+            weather_precipitation_label.text(weather_info.precipitation);
+            sprintf(weather_info.humidity,"%d%%",humidity);
+            weather_humidity_label.text(weather_info.humidity);
+            if(precip_mm>250) {
+                weather_icon.svg(weather_cloud_showers_heavy);
+            } else if(weather_info.is_day) {
+                if(precip_mm>.5f) {
+                    if(temp_c<=0.f) {
+                        weather_icon.svg(weather_snowflake);
+                    } else {
+                        weather_icon.svg(weather_cloud_rain);
+                    }
+                } else {
+                    if(cloud>=25) {
+                        weather_icon.svg(weather_cloud);
+                    } else {
+                        weather_icon.svg(weather_sun);
+                    }
+                }
+            } else {
+                if(precip_mm>.5f) {
+                    if(temp_c<=0.f) {
+                        weather_icon.svg(weather_snowflake);
+                    } else {
+                        weather_icon.svg(weather_cloud_moon_rain);
+                    }
+                } else {
+                    if(cloud>=25) {
+                        weather_icon.svg(weather_cloud_moon);
+                    } else {
+                        weather_icon.svg(weather_moon);
+                    }
+                }
+            }
+            weather_screen.invalidate(); // workaround for uix bug
+            weather_screen.update();
+            return display_update_3bit();
+        }
+        return false;
+    }
+    http_end(handle);
+    return false;
+}
