@@ -20,15 +20,19 @@ using namespace uix;
 char ssid[65];
 char pass[129];
 char address[129];
-
-static volatile int dhcp_connected = 0;
+static task_mutex_t dhcp_mutex;
+static int dhcp_connected = 0;
 static int dhcp_connected_old = -1;
 static void portal_on_connect(void* state) {
+    task_mutex_lock(dhcp_mutex,-1);
     dhcp_connected = 1;
+    task_mutex_unlock(dhcp_mutex);
 
 }
 static void portal_on_disconnect(void* state) {
+    task_mutex_lock(dhcp_mutex,-1);
     dhcp_connected = 0;
+    task_mutex_unlock(dhcp_mutex);
 }
 #endif
 extern "C" void run(void) {
@@ -52,6 +56,11 @@ extern "C" void run(void) {
     if(net_status()!=NET_CONNECTED) {
         net_end();
 #ifdef ESP_PLATFORM
+        dhcp_mutex = task_mutex_init();
+        if(dhcp_mutex==nullptr) {
+            puts("Could not initialize DHCP mutex");
+            return;
+        }
         captive_portal_on_sta_connect(portal_on_connect,nullptr);
         captive_portal_on_sta_disconnect(portal_on_disconnect,nullptr);
         if(!captive_portal_init()) {
@@ -92,9 +101,6 @@ extern "C" void run(void) {
                     }
                 }
             }
-            
-            
-            
         }
     }
 #else
