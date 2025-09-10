@@ -1,5 +1,6 @@
 #include "ui_weather.hpp"
 #include <time.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include "config.h"
@@ -9,11 +10,86 @@
 #include "json.hpp"
 #include "assets/connectivity.hpp"
 #include "assets/weather.hpp"
+#include "assets/compass.hpp"
 using namespace gfx;
 using namespace uix;
 using namespace json;
 using label3_t = vlabel<surface3_t>;
 using icon3_t = icon_box<surface3_t>;
+
+template<typename ControlSurfaceType>
+class needle : public canvas_control<ControlSurfaceType> {
+    using base_type = uix::canvas_control<ControlSurfaceType>;
+public:
+    using type = needle;
+    using control_surface_type = ControlSurfaceType;
+private:
+    float m_angle;
+    canvas_path m_path;
+    bool m_path_dirty;
+    static void update_transform(float rotation, float& ctheta, float& stheta) {
+        ctheta = cosf(rotation);
+        stheta = sinf(rotation);
+    }
+    // transform a point given some thetas, a center and an offset
+    static gfx::pointf transform_point(float ctheta, float stheta, gfx::pointf center, gfx::pointf offset, float x, float y) {
+        float rx = (ctheta * (x - (float)center.x) - stheta * (y - (float)center.y) + (float)center.x) + offset.x;
+        float ry = (stheta * (x - (float)center.x) + ctheta * (y - (float)center.y) + (float)center.y) + offset.y;
+        return {(float)rx, (float)ry};
+    }
+public:
+    needle() : base_type() ,m_angle(0),m_path_dirty(true) {
+    }
+    virtual ~needle() {
+
+    }
+    float angle() const {
+        return m_angle;
+    }
+    void angle(float value) {
+        m_angle = value;
+        m_path_dirty = true;
+        this->invalidate();
+    }
+protected:
+    virtual void on_before_paint() override {
+        if(m_path_dirty) {
+            if(gfx_result::success!=m_path.initialize()) {
+                return;
+            }
+            float w = this->dimensions().width;
+            float h = this->dimensions().height;
+            if(w>h) { w= h; }
+            pointf center(w*.5f,w*.5f);
+            pointf offset(0,0);
+            float ctheta, stheta;
+            update_transform(m_angle, ctheta, stheta);
+            m_path.clear();
+            srect16 sr(0, w / 20, w / 20, w / 2);
+            sr.center_horizontal_inplace(this->dimensions().bounds());
+        
+            m_path.move_to(transform_point(ctheta, stheta, center, offset, sr.x1 + sr.width() * 0.5f, sr.y1));
+            m_path.line_to(transform_point(ctheta, stheta, center, offset, sr.x2, sr.y2));
+            m_path.line_to(transform_point(ctheta, stheta, center, offset, sr.x1 + sr.width() * 0.5f, sr.y2 + (w / 20)));
+            m_path.line_to(transform_point(ctheta, stheta, center, offset, sr.x1, sr.y2));
+            m_path.close();
+            m_path_dirty = false;
+        }
+    }
+    virtual void on_paint(gfx::canvas& destination, const gfx::srect16& clip) override {
+        if(m_path_dirty) {
+            return;
+        }
+        gfx::canvas_style si = destination.style();
+        si.fill_paint_type = gfx::paint_type::solid;
+        si.stroke_paint_type = gfx::paint_type::none;
+        si.fill_color = vector_pixel(255,127,127,127);
+        destination.style(si);
+        destination.path(m_path);
+        destination.render();
+    }
+};
+using needle3_t = needle<surface3_t>;
 
 typedef struct {
     char area[64];
@@ -30,13 +106,14 @@ typedef struct {
 } weather_info_t;
 
 static screen3_t weather_screen;
-
 static char weather_location[256];
 static const char* weather_api_url_part= "http://api.weatherapi.com/v1/current.json?key=f188c23cb291489389755443221206&aqi=no&q=";
 static char weather_api_url[1025];
 static weather_info_t weather_info;
 static icon3_t weather_connected_icon;
 static icon3_t weather_icon;
+static icon3_t weather_compass;
+static needle3_t weather_compass_needle;
 static label3_t weather_area_label;
 static label3_t weather_condition_label;
 
@@ -63,8 +140,15 @@ bool ui_weather_init() {
     weather_icon.svg_size(connectivity_wifi_dimensions);
     weather_icon.svg(connectivity_wifi);
     weather_screen.register_control(weather_icon);
-
     srect16 sr = weather_icon.bounds();
+    sr.offset_inplace(weather_screen.dimensions().width-weather_icon.dimensions().width,0);
+    weather_compass.bounds(sr);
+    weather_compass.svg_size(COMPASS_DIMENSIONS);
+    weather_compass.svg(compass);
+    weather_screen.register_control(weather_compass);
+    weather_compass_needle.bounds(sr);
+    weather_screen.register_control(weather_compass_needle);
+    sr = weather_icon.bounds();
     sr.offset_inplace(weather_icon.dimensions().width+2,0);
     sr.y2/=2;
     sr.y2-=1;
@@ -191,6 +275,7 @@ bool ui_weather_fetch() {
         json_reader_ex<64> reader(stm);
         //time_t last_update;
         float temp_c=0, feels_c=0, wind_kph=0, precip_mm=0, gust_kph=0;
+        float wind_angle=0;
         int humidity=0, cloud=0;
         char wind_dir[16];
         //char wind_gust[16];
@@ -235,6 +320,8 @@ bool ui_weather_fetch() {
                             cloud = reader.value_int();
                         } else if(0==strcmp("gust_kph",reader.value()) && reader.read()) {
                             gust_kph = reader.value_real();
+                        } else if(0==strcmp("wind_degree",reader.value()) && reader.read()) {
+                            wind_angle = gfx::math::deg2rad((reader.value_int())%360);
                         }
                     }
                 }
@@ -244,6 +331,7 @@ bool ui_weather_fetch() {
         if(success) {
             weather_area_label.text(weather_info.area);
             weather_condition_label.text(weather_info.condition);
+            weather_compass_needle.angle(wind_angle);
             sprintf(weather_info.temp,"%0.1fC (feels %0.1fC)",temp_c,feels_c);
             weather_temp_label.text(weather_info.temp);
             snprintf(weather_info.wind,sizeof(weather_info.wind),"%s %0.1fKPH (gust %0.1fKPH)",wind_dir,wind_kph,gust_kph);

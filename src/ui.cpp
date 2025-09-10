@@ -6,5 +6,6 @@
 #include "assets/weather.hpp"
 #define CONNECTIVITY_IMPLEMENTATION
 #include "assets/connectivity.hpp"
-
+#define COMPASS_IMPLEMENTATION
+#include "assets/compass.hpp"
 gfx::const_buffer_stream& text_font = OpenSans_Regular;
