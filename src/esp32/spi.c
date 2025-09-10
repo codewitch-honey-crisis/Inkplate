@@ -1,3 +1,4 @@
+#ifdef ESP_PLATFORM
 #include "spi.h"
 #include <memory.h>
 #include "hardware.h"
@@ -24,3 +25,4 @@ bool spi_init(void) {
     spi_initialized=true;
     return true;
 }
+#endif

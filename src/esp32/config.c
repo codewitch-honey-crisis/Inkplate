@@ -1,3 +1,4 @@
+#ifdef ESP_PLATFORM
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
@@ -55,3 +56,4 @@ bool config_add_value(const char* key, const char* value) {
     fclose(f);
     return true;
 }
+#endif

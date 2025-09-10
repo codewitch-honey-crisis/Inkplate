@@ -1,3 +1,4 @@
+#ifdef ESP_PLATFORM
 /*
  * SPDX-FileCopyrightText: 2021-2023 Espressif Systems (Shanghai) CO LTD
  *
@@ -288,3 +289,4 @@ void stop_dns_server(dns_server_handle_t handle)
         free(handle);
     }
 }
+#endif

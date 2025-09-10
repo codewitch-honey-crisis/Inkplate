@@ -283,9 +283,12 @@ bool ui_weather_fetch() {
                     }
                 }
             }
-            weather_screen.invalidate(); // workaround for uix bug
+            //weather_screen.invalidate(); // workaround for uix bug
             weather_screen.update();
-            return display_update_3bit();
+            if(display_update_3bit()) {
+                display_sleep();
+                return true;
+            }
         }
         return false;
     }

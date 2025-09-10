@@ -1,3 +1,4 @@
+#ifdef ESP_PLATFORM
 #include "fs.h"
 #include "esp_random.h"
 #include "driver/sdmmc_host.h"
@@ -120,3 +121,4 @@ bool fs_internal_init(void) {
     internal_init = true;
     return true;
 }
+#endif

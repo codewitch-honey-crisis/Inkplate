@@ -1,3 +1,4 @@
+#ifdef ESP_PLATFORM
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "rtc_wdt.h"
@@ -16,3 +17,4 @@ void app_main(void) {
         }
     }
 }
+#endif

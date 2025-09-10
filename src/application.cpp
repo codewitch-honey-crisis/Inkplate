@@ -1,7 +1,9 @@
 #include "display.h"
+#include "button.h"
 #include "task.h"
 #include "timing.h"
 #include "fs.h"
+#include "rtc_time.h"
 #ifdef ESP_PLATFORM
 #include "rtc_wdt.h"
 #include "esp_task_wdt.h"
@@ -35,6 +37,12 @@ static void portal_on_disconnect(void* state) {
     task_mutex_unlock(dhcp_mutex);
 }
 #endif
+static uint32_t fetch_ts = 0;
+static void on_button_changed(bool pressed, void* state) {
+    if(!pressed) {
+        //fetch_ts=0;
+    }
+}
 extern "C" void run(void) {
     if(!fs_internal_init()) {
         puts("FS init failed");
@@ -43,6 +51,15 @@ extern "C" void run(void) {
         puts("Display init failed");
         return;
     }
+    if(!button_init()) {
+        puts("BUtton init failed");
+        return;
+    }
+    if(!rtc_time_init()) {
+        puts("RTC init failed");
+        return;
+    }
+    button_on_press_changed_callback(on_button_changed,nullptr);
     if(net_init()) {
         while(net_status()==NET_WAITING) {
             timing_delay_ms(5);
@@ -116,10 +133,10 @@ extern "C" void run(void) {
     }
 }
 extern "C" void loop(void) {
-    static uint32_t ts = 0;
+    
     if(net_status()==NET_CONNECTED) {
-        if(ts==0 || timing_get_ms()>=ts+10*60*1000) {
-            ts=timing_get_ms();
+        if(fetch_ts==0 || timing_get_ms()>=fetch_ts+10*60*1000) {
+            fetch_ts=timing_get_ms();
             if(!ui_weather_fetch()) {
                 puts("Could not fetch weather");
             }

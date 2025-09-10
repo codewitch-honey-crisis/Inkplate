@@ -1,3 +1,4 @@
+#ifdef ESP_PLATFORM
 #include "httpd.h"
 #include <ctype.h>
 #include <stddef.h>
@@ -367,3 +368,4 @@ char* httpd_url_decode(char* dst, size_t dstlen, const char* src) {
     }
     return dst;
 }
+#endif

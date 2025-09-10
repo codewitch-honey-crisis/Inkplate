@@ -984,6 +984,9 @@ static bool panel_update_3bit(void)
 bool display_update_3bit(void) {
     return panel_update_3bit();
 }
+bool display_sleep(void) {
+    return panel_off();
+}
 size_t display_buffer_3bit_size() {
     return E_INK_WIDTH*E_INK_HEIGHT/2;
 }

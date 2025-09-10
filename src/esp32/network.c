@@ -1,3 +1,4 @@
+#ifdef ESP_PLATFORM
 #include "network.h"
 #include <stdio.h>
 #include <memory.h>
@@ -257,3 +258,4 @@ bool net_set_credentials(const char* ssid, const char* pass) {
     fclose(file);
     return true;
 }
+#endif

@@ -1,3 +1,4 @@
+#ifdef ESP_PLATFORM
 #include "http.h"
 #include <stdint.h>
 #include <memory.h>
@@ -62,3 +63,4 @@ char* http_url_encode(char* enc, size_t size, const char* s,
     }
     return result;
 }
+#endif

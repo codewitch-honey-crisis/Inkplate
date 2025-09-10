@@ -1,3 +1,4 @@
+#ifdef ESP_PLATFORM
 #include "timing.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
@@ -21,3 +22,4 @@ void timing_delay_ms(uint32_t ms) {
     uint32_t remainder_usec = (ms % portTICK_PERIOD_MS) * 1000;
     if (remainder_usec) timing_delay_us(remainder_usec);
 }
+#endif

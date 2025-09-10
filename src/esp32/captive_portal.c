@@ -1,3 +1,4 @@
+#ifdef ESP_PLATFORM
 #include "captive_portal.h"
 
 #include <memory.h>
@@ -557,3 +558,4 @@ bool captive_portal_get_credentials(char* out_ssid,size_t out_ssid_length, char*
     strncpy(out_pass,wifi_pass,out_pass_length);
     return true;
 }
+#endif

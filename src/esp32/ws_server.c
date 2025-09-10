@@ -1,3 +1,4 @@
+#ifdef ESP_PLATFORM
 #include "ws_server.h"
 // ESP32 has built in websocket support
 void ws_srv_frame_to_esp32(const ws_srv_frame_t* frame,httpd_ws_frame_t* out_esp32_frame) {
@@ -23,3 +24,4 @@ void ws_srv_unmask_payload(const ws_srv_frame_t* frame, uint8_t* payload) {
         }
     }
 }
+#endif

@@ -24,6 +24,9 @@ extern "C" {
 /// @brief Initializes the display
 /// @return True if successful, otherwise false
 bool display_init(void);
+/// @brief Sleeps the display
+/// @return True if successful, otherwise false
+bool display_sleep(void);
 /// @brief Sends the current frame buffer to the display
 /// @return True if successful, otherwise false
 bool display_update_3bit(void);

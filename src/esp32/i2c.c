@@ -1,3 +1,4 @@
+#ifdef ESP_PLATFORM
 #include "i2c.h"
 #include <stdbool.h>
 #include <memory.h>
@@ -33,3 +34,4 @@ bool i2c_init(void) {
     bus_initialized = true;
     return true;
 }
+#endif

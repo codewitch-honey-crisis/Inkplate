@@ -1,3 +1,4 @@
+#ifdef ESP_PLATFORM
 #include "task.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -45,3 +46,4 @@ void task_delay(uint32_t delay_ms) {
     }
     vTaskDelay(ticks);
 }
+#endif
