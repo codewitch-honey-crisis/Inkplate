@@ -42,6 +42,8 @@ private:
     gfx::vector_pixel m_color;
     gfx::rgba_pixel<32> m_background_color;
     gfx::stream* m_font_stream;
+    uix::uix_justify m_text_justify;
+    gfx::matrix m_matrix;
     void build_label_path_untransformed() {
         if(m_font_stream==nullptr) {
             return;
@@ -58,6 +60,57 @@ private:
             --fsize;
             
         } while(fsize>0.f && m_label_text_bounds.width()>=target_width);
+        m_matrix = gfx::matrix::create_identity();
+        float w,h;
+        switch(m_text_justify) {
+            case uix::uix_justify::top_left:
+                m_matrix.translate_inplace(-m_label_text_bounds.x1,(-m_label_text_bounds.y1));
+                break;
+            case uix::uix_justify::top_middle:
+                m_matrix.translate_inplace(-m_label_text_bounds.x1,(-m_label_text_bounds.y1));
+                w=(this->dimensions().width-m_label_text_bounds.width())*.5f;
+                m_matrix.translate_inplace(w,0);
+                break;
+            case uix::uix_justify::top_right:
+                m_matrix.translate_inplace(-m_label_text_bounds.x1,(-m_label_text_bounds.y1));
+                w = this->dimensions().width - m_label_text_bounds.width();
+                m_matrix.translate_inplace(w,0);
+                break;
+            case uix::uix_justify::center_left:
+                m_matrix.translate_inplace(-m_label_text_bounds.x1,(-m_label_text_bounds.y1));
+                h=(this->dimensions().height-m_label_text_bounds.height())*.5f;
+                m_matrix.translate_inplace(0,h);
+                break;
+            case uix::uix_justify::center:
+                m_matrix.translate_inplace(-m_label_text_bounds.x1,(-m_label_text_bounds.y1));
+                w=(this->dimensions().width-m_label_text_bounds.width())*.5f;
+                h=(this->dimensions().height-m_label_text_bounds.height())*.5f;
+                m_matrix.translate_inplace(w,h);
+                break;
+            case uix::uix_justify::center_right:
+                m_matrix.translate_inplace(0,(-m_label_text_bounds.y1));
+                w = this->dimensions().width - m_label_text_bounds.width();
+                h=(this->dimensions().height-m_label_text_bounds.height())*.5f;
+                m_matrix.translate_inplace(w,h);
+                break;
+            case uix::uix_justify::bottom_left:
+                m_matrix.translate_inplace(-m_label_text_bounds.x1,(-m_label_text_bounds.y1));
+                h = this->dimensions().height - m_label_text_bounds.height();
+                m_matrix.translate_inplace(0,h);
+                break;
+            case uix::uix_justify::bottom_middle:
+                m_matrix.translate_inplace(-m_label_text_bounds.x1,(-m_label_text_bounds.y1));
+                w=(this->dimensions().width-m_label_text_bounds.width())*.5f;
+                h = this->dimensions().height - m_label_text_bounds.height();
+                m_matrix.translate_inplace(w,h);
+                break;
+            default: //uix::uix_justify::bottom_right:
+                w = this->dimensions().width - m_label_text_bounds.width();
+                h = this->dimensions().height - m_label_text_bounds.height();
+                m_matrix.translate_inplace(w,h);
+                break;
+        }
+        
     }
 public:
     vlabel() : base_type() ,m_label_text_dirty(true) {
@@ -70,6 +123,16 @@ public:
     }
     virtual ~vlabel() {
 
+    }
+    uix::uix_justify text_justify() const {
+        return m_text_justify;
+    }
+    void text_justify(uix::uix_justify value) {
+        if(m_text_justify!=value) {
+            m_text_justify = value;
+            m_label_text_dirty = true;
+            this->invalidate();
+        }
     }
     gfx::text_handle text() const {
         return m_label_text.text;
@@ -133,9 +196,7 @@ protected:
         destination.style(si);
         // save the current transform
         gfx::matrix old = destination.transform();
-        gfx::matrix m = gfx::matrix::create_identity();
-        m=m.translate(-m_label_text_bounds.x1,(-m_label_text_bounds.y1));
-        destination.transform(m);
+        destination.transform(m_matrix);
         destination.path(m_label_text_path);
         destination.render();
         // restore the old transform

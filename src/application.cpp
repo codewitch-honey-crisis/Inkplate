@@ -118,7 +118,7 @@ extern "C" void run(void) {
 extern "C" void loop(void) {
     static uint32_t ts = 0;
     if(net_status()==NET_CONNECTED) {
-        if(ts==0 || timing_get_ms()>=ts+300*1000) {
+        if(ts==0 || timing_get_ms()>=ts+10*60*1000) {
             ts=timing_get_ms();
             if(!ui_weather_fetch()) {
                 puts("Could not fetch weather");
