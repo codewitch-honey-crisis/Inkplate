@@ -221,7 +221,6 @@ protected:
         // restore the old transform
         destination.transform(old);
     }
-
 };
 template <typename ControlSurfaceType>
 class icon_box : public uix::control<ControlSurfaceType> {

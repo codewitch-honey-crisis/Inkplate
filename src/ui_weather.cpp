@@ -67,7 +67,6 @@ protected:
             m_path.clear();
             srect16 sr(0, w / 20, w / 20, w / 2);
             sr.center_horizontal_inplace(this->dimensions().bounds());
-        
             m_path.move_to(transform_point(ctheta, stheta, center, offset, sr.x1 + sr.width() * 0.5f, sr.y1));
             m_path.line_to(transform_point(ctheta, stheta, center, offset, sr.x2, sr.y2));
             m_path.line_to(transform_point(ctheta, stheta, center, offset, sr.x1 + sr.width() * 0.5f, sr.y2 + (w / 20)));
@@ -371,7 +370,6 @@ bool ui_weather_fetch() {
                     }
                 }
             }
-            //weather_screen.invalidate(); // workaround for uix bug
             weather_screen.update();
             if(display_update_3bit()) {
                 display_sleep();
