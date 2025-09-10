@@ -7,6 +7,8 @@ typedef void(*button_on_press_changed_callback_t)(bool pressed, void* state);
 extern "C" {
 #endif
 bool button_init(void);
+bool button_update(void);
+bool button_pressed(void);
 void button_on_press_changed_callback(button_on_press_changed_callback_t callback, void* state);
 #ifdef __cplusplus
 }

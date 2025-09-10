@@ -97,6 +97,7 @@ typedef struct {
     bool is_day;
     char temp[64];
     char condition[64];
+    char pressure[32];
     char wind[64];
     char humidity[16];
     char precipitation[32];
@@ -115,7 +116,6 @@ static icon3_t weather_compass;
 static needle3_t weather_compass_needle;
 static label3_t weather_area_label;
 static label3_t weather_condition_label;
-
 static label3_t weather_temp_title_label;
 static label3_t weather_temp_label;
 static label3_t weather_wind_title_label;
@@ -124,6 +124,10 @@ static label3_t weather_precipitation_title_label;
 static label3_t weather_precipitation_label;
 static label3_t weather_humidity_title_label;
 static label3_t weather_humidity_label;
+static label3_t weather_visibility_title_label;
+static label3_t weather_visibility_label;
+static label3_t weather_pressure_title_label;
+static label3_t weather_pressure_label;
 
 bool ui_weather_init() {
     weather_location[0]='\0';
@@ -239,7 +243,45 @@ bool ui_weather_init() {
     weather_humidity_label.text("Fetching...");
     weather_humidity_label.font(text_font);
     weather_humidity_label.color(ucolor_t::black);
-    if(uix_result::success!=weather_screen.register_control(weather_humidity_label)) {
+    weather_screen.register_control(weather_humidity_label);
+
+    sr = weather_precipitation_title_label.bounds();
+    sr.offset_inplace(0,(sr.height()*2)+(fheight/2));
+    weather_visibility_title_label.bounds(sr);
+    weather_visibility_title_label.text("VISIBILITY");
+    weather_visibility_title_label.font(text_font);
+    weather_visibility_title_label.background_color(rgba_pixel<32>(L,L,L,255));
+    weather_visibility_title_label.color(ucolor_t::white);
+    weather_visibility_title_label.text_justify(uix_justify::center);
+    weather_visibility_title_label.font_size(ftheight);
+    weather_screen.register_control(weather_visibility_title_label);
+    
+    sr.offset_inplace(sr.width()+2,0);
+    weather_pressure_title_label.bounds(sr);
+    weather_pressure_title_label.text("PRESSURE");
+    weather_pressure_title_label.font(text_font);
+    weather_pressure_title_label.background_color(rgba_pixel<32>(L,L,L,255));
+    weather_pressure_title_label.color(ucolor_t::white);
+    weather_pressure_title_label.text_justify(uix_justify::center);
+    weather_pressure_title_label.font_size(ftheight);
+    weather_screen.register_control(weather_pressure_title_label);
+
+    sr = weather_visibility_title_label.bounds();
+    sr.y2+=(fheight/2);
+    sr.offset_inplace(0,weather_visibility_title_label.dimensions().height+1);
+    weather_visibility_label.bounds(sr);
+    weather_visibility_label.text("Fetching...");
+    weather_visibility_label.font(text_font);
+    weather_visibility_label.color(ucolor_t::black);
+    weather_screen.register_control(weather_visibility_label);
+
+    sr = weather_pressure_title_label.bounds().offset(0,weather_pressure_title_label.dimensions().height+1);
+    sr.y2+=(fheight/2);
+    weather_pressure_label.bounds(sr);
+    weather_pressure_label.text("Fetching...");
+    weather_pressure_label.font(text_font);
+    weather_pressure_label.color(ucolor_t::black);
+    if(uix_result::success!=weather_screen.register_control(weather_pressure_label)) {
         weather_screen.unregister_controls();
         return false;
     }
@@ -273,7 +315,7 @@ bool ui_weather_fetch() {
         http_stream stm(handle);
         json_reader_ex<64> reader(stm);
         //time_t last_update;
-        float temp_c=0, feels_c=0, wind_kph=0, precip_mm=0, gust_kph=0;
+        float temp_c=0, feels_c=0, wind_kph=0, precip_mm=0, gust_kph=0, vis_km=0,pressure_mb=0;
         float wind_angle=0;
         int humidity=0, cloud=0;
         char wind_dir[16];
@@ -321,6 +363,10 @@ bool ui_weather_fetch() {
                             gust_kph = reader.value_real();
                         } else if(0==strcmp("wind_degree",reader.value()) && reader.read()) {
                             wind_angle = gfx::math::deg2rad((reader.value_int())%360);
+                        } else if(0==strcmp("vis_km",reader.value()) && reader.read()) {
+                            vis_km = reader.value_real();
+                        } else if(0==strcmp("pressure_mb",reader.value()) && reader.read()) {
+                            pressure_mb = reader.value_real();
                         }
                     }
                 }
@@ -339,6 +385,10 @@ bool ui_weather_fetch() {
             weather_precipitation_label.text(weather_info.precipitation);
             sprintf(weather_info.humidity,"%d%%",humidity);
             weather_humidity_label.text(weather_info.humidity);
+            sprintf(weather_info.visibility,"%0.1fkm",vis_km);
+            weather_visibility_label.text(weather_info.visibility);
+            sprintf(weather_info.pressure,"%0.1fmb",pressure_mb);
+            weather_pressure_label.text(weather_info.pressure);
             if(precip_mm>250) {
                 weather_icon.svg(weather_cloud_showers_heavy);
             } else if(weather_info.is_day) {

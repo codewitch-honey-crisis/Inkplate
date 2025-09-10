@@ -40,7 +40,8 @@ static void portal_on_disconnect(void* state) {
 static uint32_t fetch_ts = 0;
 static void on_button_changed(bool pressed, void* state) {
     if(!pressed) {
-        //fetch_ts=0;
+        puts("released!");
+        fetch_ts=0;
     }
 }
 extern "C" void run(void) {
@@ -133,7 +134,7 @@ extern "C" void run(void) {
     }
 }
 extern "C" void loop(void) {
-    
+    button_update();
     if(net_status()==NET_CONNECTED) {
         if(fetch_ts==0 || timing_get_ms()>=fetch_ts+10*60*1000) {
             fetch_ts=timing_get_ms();
