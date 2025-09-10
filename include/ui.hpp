@@ -44,22 +44,32 @@ private:
     gfx::stream* m_font_stream;
     uix::uix_justify m_text_justify;
     gfx::matrix m_matrix;
+    float m_font_size;
     void build_label_path_untransformed() {
         if(m_font_stream==nullptr) {
             return;
         }
         m_label_text.ttf_font = m_font_stream;
-        const float target_width = this->dimensions().width;
-        float fsize = this->dimensions().height*.8f;
-        m_label_text_path.initialize();
-        do {
+        if(m_font_size<=0.f) {
+            const float target_width = this->dimensions().width;
+            float fsize = this->dimensions().height*.8f;
+            m_label_text_path.initialize();
+            do {
+                m_label_text_path.clear();
+                m_label_text.font_size = fsize;
+                m_label_text_path.text({0.f,0.f},m_label_text);
+                m_label_text_bounds = m_label_text_path.bounds(true);
+                --fsize;
+                
+            } while(fsize>0.f && m_label_text_bounds.width()>=target_width);
+        } else {
+            m_label_text_path.initialize();
             m_label_text_path.clear();
-            m_label_text.font_size = fsize;
+            m_label_text.font_size = m_font_size;
             m_label_text_path.text({0.f,0.f},m_label_text);
             m_label_text_bounds = m_label_text_path.bounds(true);
-            --fsize;
             
-        } while(fsize>0.f && m_label_text_bounds.width()>=target_width);
+        }
         m_matrix = gfx::matrix::create_identity();
         float w,h;
         switch(m_text_justify) {
@@ -120,6 +130,7 @@ public:
         m_label_text.ttf_font_face = 0;
         m_color = gfx::vector_pixel(255,255,255,255);
         m_background_color = gfx::rgba_pixel<32>(0,true);
+        m_font_size = 0.f;
     }
     virtual ~vlabel() {
 
@@ -153,6 +164,14 @@ public:
     }
     void font(gfx::stream& value) {
         m_font_stream = &value;
+        m_label_text_dirty = true;
+        this->invalidate();
+    }
+    float font_size() const {
+        return m_font_size;
+    }
+    void font_size(float value) {
+        m_font_size = value;
         m_label_text_dirty = true;
         this->invalidate();
     }

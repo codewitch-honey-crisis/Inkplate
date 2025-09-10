@@ -58,6 +58,7 @@ bool ui_weather_init() {
     weather_screen.dimensions((ssize16)screen_dimensions);
     weather_screen.background_color(scolor3_t::white);
     const float fheight = screen_dimensions.width/8.f;
+    const float ftheight = fheight/2.f;
     weather_icon.bounds(srect16(spoint16::zero(),ssize16(screen_dimensions.width/8,screen_dimensions.width/8)));
     weather_icon.svg_size(connectivity_wifi_dimensions);
     weather_icon.svg(connectivity_wifi);
@@ -70,8 +71,9 @@ bool ui_weather_init() {
     sr.x2 = weather_screen.bounds().x2;
     weather_area_label.bounds(sr);
     weather_area_label.font(text_font);
+    constexpr static const uint8_t LP = .5f * 255;
     constexpr static const uint8_t L = .6666f * 255;
-    weather_area_label.color(rgba_pixel<32>(L,L,L,255));
+    weather_area_label.color(rgba_pixel<32>(LP,LP,LP,255));
     weather_area_label.text("Fetching...");
     weather_screen.register_control(weather_area_label);
 
@@ -88,6 +90,7 @@ bool ui_weather_init() {
     weather_temp_title_label.font(text_font);
     weather_temp_title_label.color(ucolor_t::white);
     weather_temp_title_label.text("TEMPERATURE");
+    weather_temp_title_label.font_size(ftheight);
     weather_temp_title_label.text_justify(uix_justify::center);
     weather_screen.register_control(weather_temp_title_label);
 
@@ -97,6 +100,7 @@ bool ui_weather_init() {
     weather_wind_title_label.font(text_font);
     weather_wind_title_label.color(ucolor_t::white);
     weather_wind_title_label.text("WIND");
+    weather_wind_title_label.font_size(ftheight);
     weather_wind_title_label.text_justify(uix_justify::center);
     weather_screen.register_control(weather_wind_title_label);
     
@@ -124,6 +128,7 @@ bool ui_weather_init() {
     weather_precipitation_title_label.background_color(rgba_pixel<32>(L,L,L,255));
     weather_precipitation_title_label.color(ucolor_t::white);
     weather_precipitation_title_label.text_justify(uix_justify::center);
+    weather_precipitation_title_label.font_size(ftheight);
     weather_screen.register_control(weather_precipitation_title_label);
     
     sr.offset_inplace(sr.width()+2,0);
@@ -133,6 +138,7 @@ bool ui_weather_init() {
     weather_humidity_title_label.background_color(rgba_pixel<32>(L,L,L,255));
     weather_humidity_title_label.color(ucolor_t::white);
     weather_humidity_title_label.text_justify(uix_justify::center);
+    weather_humidity_title_label.font_size(ftheight);
     weather_screen.register_control(weather_humidity_title_label);
     
     sr = weather_precipitation_title_label.bounds();
