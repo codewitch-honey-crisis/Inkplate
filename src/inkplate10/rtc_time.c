@@ -74,12 +74,12 @@ static bool i2c_write_read(uint8_t address, const void* to_write, size_t write_l
     }
     return false;
 }
-static uint8_t rtcDecToBcd(uint8_t val)
+static uint8_t dec_to_bcd(uint8_t val)
 {
     return ((val / 10 * 16) + (val % 10));
 }
 
-static uint8_t rtcBcdToDec(uint8_t val)
+static uint8_t bcd_to_dec(uint8_t val)
 {
     return ((val / 16 * 10) + (val % 16));
 }
@@ -101,26 +101,26 @@ bool rtc_time_now(struct tm* out_tm) {
         ESP_LOGE(TAG,"Could not read time");
         return false;
     }
-    out_tm->tm_sec = rtcBcdToDec(in[0] & 0x7F);
-    out_tm->tm_min = rtcBcdToDec(in[1] & 0x7F);
-    out_tm->tm_hour = rtcBcdToDec(in[2] & 0x3F);
-    out_tm->tm_mday = rtcBcdToDec(in[3] & 0x3F);
-    out_tm->tm_wday = rtcBcdToDec(in[4] & 0x07);
-    out_tm->tm_mon = rtcBcdToDec(in[5] & 0x1F) - 1;
-    out_tm->tm_year = rtcBcdToDec(in[6]) + 2000 - 1900;
+    out_tm->tm_sec = bcd_to_dec(in[0] & 0x7F);
+    out_tm->tm_min = bcd_to_dec(in[1] & 0x7F);
+    out_tm->tm_hour = bcd_to_dec(in[2] & 0x3F);
+    out_tm->tm_mday = bcd_to_dec(in[3] & 0x3F);
+    out_tm->tm_wday = bcd_to_dec(in[4] & 0x07);
+    out_tm->tm_mon = bcd_to_dec(in[5] & 0x1F) - 1;
+    out_tm->tm_year = bcd_to_dec(in[6]) + 2000 - 1900;
     return true;
 }
 
 bool rtc_time_set(const struct tm* time) {
     
     uint8_t out[] = {0x03, 170,
-        rtcDecToBcd(time->tm_sec),
-        rtcDecToBcd(time->tm_min),
-        rtcDecToBcd(time->tm_hour),
-        rtcDecToBcd(time->tm_mday),
-        rtcDecToBcd(time->tm_wday),
-        rtcDecToBcd(time->tm_mon+1),
-        rtcDecToBcd(time->tm_year+1900-2000),
+        dec_to_bcd(time->tm_sec),
+        dec_to_bcd(time->tm_min),
+        dec_to_bcd(time->tm_hour),
+        dec_to_bcd(time->tm_mday),
+        dec_to_bcd(time->tm_wday),
+        dec_to_bcd(time->tm_mon+1),
+        dec_to_bcd(time->tm_year+1900-2000),
     };
     if(!i2c_write(0x51,out,sizeof(out))) {
         ESP_LOGE(TAG,"Could not set time");
