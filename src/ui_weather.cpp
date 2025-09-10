@@ -57,7 +57,7 @@ bool ui_weather_init() {
     weather_screen.buffer1(display_buffer_3bit());
     weather_screen.dimensions((ssize16)screen_dimensions);
     weather_screen.background_color(scolor3_t::white);
-    float fheight = screen_dimensions.width/8.f;
+    const float fheight = screen_dimensions.width/8.f;
     weather_icon.bounds(srect16(spoint16::zero(),ssize16(screen_dimensions.width/8,screen_dimensions.width/8)));
     weather_icon.svg_size(connectivity_wifi_dimensions);
     weather_icon.svg(connectivity_wifi);
@@ -107,6 +107,7 @@ bool ui_weather_init() {
     weather_screen.register_control(weather_temp_label);
 
     sr = weather_wind_title_label.bounds().offset(0,weather_wind_title_label.dimensions().height+1);
+    sr.y2+=(fheight/2);
     weather_wind_label.bounds(sr);
     weather_wind_label.text("Fetching...");
     weather_wind_label.font(text_font);
@@ -114,10 +115,7 @@ bool ui_weather_init() {
     weather_screen.register_control(weather_wind_label);
 
     sr = weather_temp_title_label.bounds();
-    int h = sr.height();
-    sr.y1 = weather_temp_label.bounds().y2+2;
-    sr.y2+=h-1;
-
+    sr.offset_inplace(0,(sr.height()*2)+(fheight/2));
     weather_precipitation_title_label.bounds(sr);
     weather_precipitation_title_label.text("PRECIPITATION");
     weather_precipitation_title_label.font(text_font);
@@ -133,14 +131,17 @@ bool ui_weather_init() {
     weather_humidity_title_label.color(ucolor_t::white);
     weather_screen.register_control(weather_humidity_title_label);
     
-    sr = weather_precipitation_title_label.bounds().offset(0,weather_precipitation_title_label.dimensions().height+1);
+    sr = weather_precipitation_title_label.bounds();
+    sr.y2+=(fheight/2);
+    sr.offset_inplace(0,weather_precipitation_title_label.dimensions().height+1);
     weather_precipitation_label.bounds(sr);
     weather_precipitation_label.text("Fetching...");
     weather_precipitation_label.font(text_font);
     weather_precipitation_label.color(ucolor_t::black);
     weather_screen.register_control(weather_precipitation_label);
-    
+
     sr = weather_humidity_title_label.bounds().offset(0,weather_humidity_title_label.dimensions().height+1);
+    sr.y2+=(fheight/2);
     weather_humidity_label.bounds(sr);
     weather_humidity_label.text("Fetching...");
     weather_humidity_label.font(text_font);
