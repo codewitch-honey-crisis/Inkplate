@@ -92,6 +92,7 @@ using needle3_t = needle<surface3_t>;
 
 typedef struct {
     char area[64];
+    char country[128];
     char last_updated[64];
     bool use_imperial_units;
     bool is_day;
@@ -106,6 +107,7 @@ typedef struct {
 } weather_info_t;
 
 static screen3_t weather_screen;
+static char weather_units[64];
 static char weather_location[256];
 static const char* weather_api_url_part= "http://api.weatherapi.com/v1/current.json?key=f188c23cb291489389755443221206&aqi=no&q=";
 static char weather_api_url[1025];
@@ -131,6 +133,7 @@ static label3_t weather_pressure_label;
 
 bool ui_weather_init() {
     weather_location[0]='\0';
+    weather_units[0]='\0';
     // uix uses signed coords
     weather_screen.update_mode(screen_update_mode::direct);
     weather_screen.buffer_size(display_buffer_3bit_size());
@@ -287,7 +290,18 @@ bool ui_weather_init() {
     }
     return true;    
 }
-
+static float to_fahrenheit(float celcius) {
+    return celcius * (9.f/5.f) + 32.f;
+}
+static float to_miles(float km) {
+    return km*0.621371f;
+}
+static float to_inches(float mm) {
+    return mm*0.0393701f;
+}
+static float to_psi(float mb) {
+    return mb*0.0145038f;
+}
 bool ui_weather_fetch() {
     if(weather_screen.dimensions().width==0) {
         return false;
@@ -303,7 +317,11 @@ bool ui_weather_fetch() {
         strcpy(weather_api_url,weather_api_url_part);
         strcat(weather_api_url,weather_location);
     }
-    
+    if(weather_units[0]=='\0') {
+        if(!config_get_value("units",0,weather_units,sizeof(weather_units))) {
+            strcpy(weather_units,"auto");
+        }
+    }
     http_handle_t handle = http_init(weather_api_url);
     int status =  http_read_status_and_headers(handle);
     enum {
@@ -336,6 +354,8 @@ bool ui_weather_fetch() {
                     if(reader.node_type()==json_node_type::field) {
                         if(0==strcmp("name",reader.value()) && reader.read()) {
                             strcpy(weather_info.area,reader.value());
+                        } else if(0==strcmp("country",reader.value()) && reader.read()) {
+                            strcpy(weather_info.country,reader.value());
                         }
                     }   
                 } else if(state==J_CUR) {
@@ -374,20 +394,42 @@ bool ui_weather_fetch() {
         }
         http_end(handle);
         if(success) {
+            bool is_imperial = (0==strcmp(weather_units,"imperial") || (0==strcmp(weather_units,"auto") && 0==strcmp(weather_info.country,"USA")));
             weather_area_label.text(weather_info.area);
             weather_condition_label.text(weather_info.condition);
             weather_compass_needle.angle(wind_angle);
-            sprintf(weather_info.temp,"%0.1fC (feels %0.1fC)",temp_c,feels_c);
+            if(is_imperial) {
+                sprintf(weather_info.temp,"%0.1fF (feels %0.1fF)",to_fahrenheit(temp_c),to_fahrenheit(feels_c));
+            } else {
+                sprintf(weather_info.temp,"%0.1fC (feels %0.1fC)",temp_c,feels_c);
+            }
             weather_temp_label.text(weather_info.temp);
-            snprintf(weather_info.wind,sizeof(weather_info.wind),"%s %0.1fKPH (gust %0.1fKPH)",wind_dir,wind_kph,gust_kph);
+            if(is_imperial) {
+                snprintf(weather_info.wind,sizeof(weather_info.wind),"%s %0.1fMPH (gust %0.1fMPH)",wind_dir, to_miles(wind_kph),to_miles(gust_kph));
+            } else {
+                snprintf(weather_info.wind,sizeof(weather_info.wind),"%s %0.1fKPH (gust %0.1fKPH)",wind_dir,wind_kph,gust_kph);
+            }
             weather_wind_label.text(weather_info.wind);
-            sprintf(weather_info.precipitation,"%0.1fmm",precip_mm);
+            if(is_imperial) {
+                sprintf(weather_info.precipitation,"%0.2fin",to_inches(precip_mm));
+            } else {
+                sprintf(weather_info.precipitation,"%0.1fmm",precip_mm);
+            }
             weather_precipitation_label.text(weather_info.precipitation);
             sprintf(weather_info.humidity,"%d%%",humidity);
             weather_humidity_label.text(weather_info.humidity);
-            sprintf(weather_info.visibility,"%0.1fkm",vis_km);
+            if(is_imperial) {
+                sprintf(weather_info.visibility,"%0.1fmi",to_miles(vis_km));
+            } else {
+                sprintf(weather_info.visibility,"%0.1fkm",vis_km);
+            }
             weather_visibility_label.text(weather_info.visibility);
-            sprintf(weather_info.pressure,"%0.1fmb",pressure_mb);
+            if(is_imperial) {
+                sprintf(weather_info.pressure,"%0.1fpsi",to_psi(pressure_mb));
+            } else {
+                sprintf(weather_info.pressure,"%0.1fmb",pressure_mb);
+            }
+            
             weather_pressure_label.text(weather_info.pressure);
             if(precip_mm>250) {
                 weather_icon.svg(weather_cloud_showers_heavy);

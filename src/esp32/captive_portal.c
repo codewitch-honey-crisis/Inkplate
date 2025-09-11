@@ -257,6 +257,7 @@ static void parse_url_and_apply(const char* url) {
     char pass[64];
     pass[0]='\0';
     char tz[64];
+    char units[64];
     char location[64];
     char name[64];
     char value[64];
@@ -264,6 +265,7 @@ static void parse_url_and_apply(const char* url) {
     bool set_creds = false;
     bool set_tz = false;
     bool set_location = false;
+    bool set_units = false;
     if (query != NULL) {
         while (1) {
             query = httpd_crack_query(query, name, value);
@@ -285,6 +287,11 @@ static void parse_url_and_apply(const char* url) {
                 restart = true;
                 strncpy(tz,value,63);
             }
+            if(0==strcmp("units",name)) {
+                set_units=true;
+                restart = true;
+                strncpy(units,value,63);
+            }
             if(0==strcmp("location",name)) {
                 set_location=true;
                 restart = true;
@@ -303,6 +310,11 @@ static void parse_url_and_apply(const char* url) {
         snprintf(buf,31,"%ld",ofs*3600);
         config_clear_values("tzoffset");
         config_add_value("tzoffset",buf);
+        restart=true;
+    }
+    if(set_units) {
+        config_clear_values("units");
+        config_add_value("units",units);
         restart=true;
     }
     if(set_location) {

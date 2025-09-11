@@ -61,6 +61,7 @@ const Configuration = () => {
         <label>SSID:</label><APs ssids={cfg.ap_list} /><br />
         <label>Password:</label><input type="text" name="pass" defaultValue={cfg.pass} /><br />
         <label>Location (geo coords or city/zip/postal US/UK/CA)</label><input type="text" name="location" /><br />
+        <label>Units</label><select name="units" defaultValue={"auto"}><option value="auto">Automatic</option><option value="metric">Metric</option><option value="imperial">Imperial</option></select>
         <label>Timezone:</label><Timezones/>
     </>)
 }
