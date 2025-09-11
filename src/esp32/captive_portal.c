@@ -47,6 +47,8 @@ static char* captive_portal_uri = NULL;
 char wifi_ssid[129];
 char wifi_pass[16];
 
+static wifi_ap_record_t wifi_ap_info[256];
+static size_t wifi_ap_info_size = 0;
 static void scan_for_wifi_ssid(void)
 {
     strcpy(wifi_ssid,CAPTIVE_PORTAL_SSID1);
@@ -54,8 +56,7 @@ static void scan_for_wifi_ssid(void)
     strcpy(target,CAPTIVE_PORTAL_SSID1);
     bool wifi_inited = false;
 
-    // don't want this on the stack
-    static wifi_ap_record_t ap_info[256];
+
     esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
     if(sta_netif==NULL) {
         goto error;
@@ -67,7 +68,7 @@ static void scan_for_wifi_ssid(void)
     }
     uint16_t ap_max = 256;
     uint16_t ap_count = 0;
-    memset(ap_info, 0, sizeof(ap_info));
+    memset(wifi_ap_info, 0, sizeof(wifi_ap_info));
 
     if(ESP_OK!=esp_wifi_set_mode(WIFI_MODE_STA)) {
         goto error;
@@ -86,17 +87,18 @@ static void scan_for_wifi_ssid(void)
         ESP_LOGE(TAG,"Error retreiving ap count");
         goto error;
     }
-    if(ESP_OK!=esp_wifi_scan_get_ap_records(&ap_max, ap_info)) {
+    if(ESP_OK!=esp_wifi_scan_get_ap_records(&ap_max, wifi_ap_info)) {
         ESP_LOGE(TAG,"Error scanning records");
         esp_wifi_clear_ap_list();
         goto error;
     }
+    wifi_ap_info_size = ap_max;
     int result = 1;
     bool done = false;
     while(!done) {
             done = true;
             for(int i = 0;i<ap_max;++i) {
-            if(0==strcmp((char*)ap_info[i].ssid,target)) {
+            if(0==strcmp((char*)wifi_ap_info[i].ssid,target)) {
                 strcpy(target,CAPTIVE_PORTAL_SSID1);
                 itoa(++result,target+strlen(target),10);
                 done = false;
@@ -115,6 +117,15 @@ error:
         esp_wifi_deinit();
         
     }
+}
+size_t captive_portal_get_ap_list_size() {
+    return wifi_ap_info_size;
+}
+const char* captive_portal_get_ap_list_ssid(size_t index) {
+    if(index<0 || index > wifi_ap_info_size) {
+        return NULL;
+    }
+    return (const char*)wifi_ap_info[index].ssid;
 }
 
 static void wifi_event_handler(void* arg, esp_event_base_t event_base,

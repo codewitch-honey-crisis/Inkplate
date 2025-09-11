@@ -2,6 +2,7 @@
 #define HTTPD_APPLICATION_H
 #include <stdbool.h>
 #include <stddef.h>
+#include "esp32/captive_portal.h"
 #include "httpd.h"
 #include "network.h"
 #include "config.h"

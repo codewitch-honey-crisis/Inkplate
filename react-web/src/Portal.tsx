@@ -44,12 +44,23 @@ const Timezones = () => {
     return (<select name="tz">{tzArray}</select>)
 
 };
+const APEntry = ({ssid}) => {
+    return (<option value={ssid}>{ssid}</option>
+    )
+}
+const APs = ({ssids}) => {
+    const apArray = [];
+    for (let i: number = 0; i < ssids.length; ++i) {
+        apArray.push(<APEntry ssid={ssids[i]} />);
+    }
+    return (<select name="ssid">{apArray}</select>)
+}
 const Configuration = () => {
     const cfg = configData.read();
     return (<>
-        <label>SSID:</label><input type="text" name="ssid" defaultValue={cfg.ssid} /><br />
+        <label>SSID:</label><APs ssids={cfg.ap_list} /><br />
         <label>Password:</label><input type="text" name="pass" defaultValue={cfg.pass} /><br />
-        <label>Location (geo coords or zip/postal US/UK/CA)</label><input type="text" name="location" /><br />
+        <label>Location (geo coords or city/zip/postal US/UK/CA)</label><input type="text" name="location" /><br />
         <label>Timezone:</label><Timezones/>
     </>)
 }

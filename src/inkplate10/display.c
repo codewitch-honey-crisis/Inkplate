@@ -1,4 +1,24 @@
 #if defined(INKPLATE10) || defined(INKPLATE10V2)
+/* Adapted from the following by honey the codewitch
+
+----- InkPlate Low Level drivers License - GNU V3.0 License --------------------
+
+This code is released under the GNU Lesser General Public License
+v3.0: https://www.gnu.org/licenses/lgpl-3.0.en.html
+Please review the LICENSE file included with this example.
+If you have any questions about licensing, please contact
+
+  Guy Turcotte<turgu666@gmail.com>
+  techsupport@e-radionica.com
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+IN THE SOFTWARE.
+*/
 #include "display.h"
 
 #include <stddef.h>
@@ -159,26 +179,6 @@ struct waveformData {
     uint8_t checksum;
 };
 
-/* Adapted from the following by honey the codewitch
-
------ InkPlate Low Level drivers License - GNU V3.0 License --------------------
-
-This code is released under the GNU Lesser General Public License
-v3.0: https://www.gnu.org/licenses/lgpl-3.0.en.html
-Please review the LICENSE file included with this example.
-If you have any questions about licensing, please contact
-
-  Guy Turcotte<turgu666@gmail.com>
-  techsupport@e-radionica.com
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-IN THE SOFTWARE.
-*/
 static const char *TAG = "display";
 typedef enum { WHITE = 0b10101010,
                BLACK = 0b01010101,

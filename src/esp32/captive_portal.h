@@ -16,6 +16,8 @@ void captive_portal_on_sta_disconnect(captive_portal_callback_t callback, void* 
 /// @return true on success, false on error
 bool captive_portal_get_address(char* out_address,size_t out_address_length);
 bool captive_portal_get_credentials(char* out_ssid,size_t out_ssid_length, char* out_pass,size_t out_pass_length);
+size_t captive_portal_get_ap_list_size();
+const char* captive_portal_get_ap_list_ssid(size_t index);
 #ifdef __cplusplus
 }
 #endif
