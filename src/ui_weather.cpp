@@ -410,10 +410,14 @@ bool ui_weather_fetch() {
                 snprintf(weather_info.wind,sizeof(weather_info.wind),"%s %0.1fKPH (gust %0.1fKPH)",wind_dir,wind_kph,gust_kph);
             }
             weather_wind_label.text(weather_info.wind);
-            if(is_imperial) {
-                sprintf(weather_info.precipitation,"%0.2fin",to_inches(precip_mm));
+            if(precip_mm>0.f) {
+                if(is_imperial) {
+                    sprintf(weather_info.precipitation,"%0.2fin",to_inches(precip_mm));
+                } else {
+                    sprintf(weather_info.precipitation,"%0.1fmm",precip_mm);
+                }
             } else {
-                sprintf(weather_info.precipitation,"%0.1fmm",precip_mm);
+                sprintf(weather_info.precipitation,"n/a");
             }
             weather_precipitation_label.text(weather_info.precipitation);
             sprintf(weather_info.humidity,"%d%%",humidity);
