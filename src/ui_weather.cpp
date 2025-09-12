@@ -26,6 +26,8 @@ public:
 private:
     float m_angle;
     canvas_path m_path;
+    pointf m_end;
+    float m_radius;
     bool m_path_dirty;
     static void update_transform(float rotation, float& ctheta, float& stheta) {
         ctheta = cosf(rotation);
@@ -67,6 +69,9 @@ protected:
             m_path.clear();
             srect16 sr(0, w / 20, w / 20, w / 2);
             sr.center_horizontal_inplace(this->dimensions().bounds());
+            m_end = pointf(sr.x1 + sr.width() * 0.5f, sr.y1+(w/10.f));
+            m_radius = (w/10.f);
+            m_end = transform_point(ctheta, stheta, center, offset,m_end.x,m_end.y);
             m_path.move_to(transform_point(ctheta, stheta, center, offset, sr.x1 + sr.width() * 0.5f, sr.y1));
             m_path.line_to(transform_point(ctheta, stheta, center, offset, sr.x2, sr.y2));
             m_path.line_to(transform_point(ctheta, stheta, center, offset, sr.x1 + sr.width() * 0.5f, sr.y2 + (w / 20)));
@@ -82,9 +87,16 @@ protected:
         gfx::canvas_style si = destination.style();
         si.fill_paint_type = gfx::paint_type::solid;
         si.stroke_paint_type = gfx::paint_type::none;
-        si.fill_color = vector_pixel(255,127,127,127);
+        si.fill_color = gfx::vector_pixel(255,127,127,127);
         destination.style(si);
         destination.path(m_path);
+        destination.render();
+        si.fill_paint_type = gfx::paint_type::none;
+        si.stroke_color = gfx::vector_pixel(255,127,127,127);
+        si.stroke_paint_type = gfx::paint_type::solid;
+        si.stroke_width = 2;
+        destination.style(si);
+        destination.circle(m_end,m_radius-1);
         destination.render();
     }
 };
