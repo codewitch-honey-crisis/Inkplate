@@ -613,16 +613,16 @@ bool display_init(void) {
     pcal_ex_set_level_int( 15, LOW);
 #ifdef INKPLATE10V2
     // Set SPI pins to input to reduce power consumption in deep sleep
-    gpio_set_direction((gpio_num_t)12,GPIO_MODE_INPUT);
-    gpio_set_direction((gpio_num_t)13,GPIO_MODE_INPUT);
-    gpio_set_direction((gpio_num_t)14,GPIO_MODE_INPUT);
-    gpio_set_direction((gpio_num_t)15,GPIO_MODE_INPUT);
+    // gpio_set_direction((gpio_num_t)12,GPIO_MODE_INPUT);
+    // gpio_set_direction((gpio_num_t)13,GPIO_MODE_INPUT);
+    // gpio_set_direction((gpio_num_t)14,GPIO_MODE_INPUT);
+    // gpio_set_direction((gpio_num_t)15,GPIO_MODE_INPUT);
     
-    // And also disable uSD card supply
-    pcal_ex_set_direction_int(SD_PMOS_PIN, INPUT);
+    // // And also disable uSD card supply
+    // pcal_ex_set_direction_int(SD_PMOS_PIN, INPUT);
 #else
-    pcal_ex_set_direction_int(12, OUTPUT);
-    pcal_ex_set_level_int(12, LOW);
+    //pcal_ex_set_direction_int(12, OUTPUT);
+    //pcal_ex_set_level_int(12, LOW);
 #endif
     // CONTROL PINS
     gpio_set_direction((gpio_num_t)0,GPIO_MODE_INPUT);

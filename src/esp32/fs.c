@@ -3,6 +3,7 @@
 #include "esp_random.h"
 #include "driver/sdmmc_host.h"
 #include "driver/spi_master.h"
+#include "driver/gpio.h"
 #include "driver/sdspi_host.h"
 #include "esp_spiffs.h"
 #include "esp_vfs_fat.h"
@@ -12,11 +13,12 @@
 #include "spi.h"
 static sdmmc_card_t* fs_card = NULL;
 static bool internal_init = false;
+static const char mount_point[] = "/sdcard";
 bool fs_external_init(void) {
     if(fs_card!=NULL) {
         return true;
     }
-    static const char mount_point[] = "/sdcard";
+    
     esp_vfs_fat_sdmmc_mount_config_t mount_config;
     memset(&mount_config, 0, sizeof(mount_config));
     mount_config.format_if_mount_failed = false;
@@ -57,6 +59,20 @@ bool fs_external_init(void) {
     return true;
 #else
     return false;
+#endif
+}
+void fs_external_end(void) {
+    if(fs_card==NULL) {
+        return;
+    }
+#if SD_CS
+    esp_vfs_fat_sdcard_unmount(mount_point,fs_card);
+    fs_card = NULL;
+    gpio_reset_pin((gpio_num_t)SD_CS);
+    gpio_set_direction((gpio_num_t)SD_CS,GPIO_MODE_INPUT);
+#elif defined(SDMMC_CLK)
+    esp_vfs_fat_sdmmc_unmount();
+    fs_card = NULL;
 #endif
 }
 bool fs_get_device_id(char* out_id,size_t out_id_len) {

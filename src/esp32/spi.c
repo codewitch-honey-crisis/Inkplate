@@ -3,6 +3,7 @@
 #include <memory.h>
 #include "hardware.h"
 #include "driver/spi_master.h"
+#include "driver/gpio.h"
 static bool spi_initialized = false;
 bool spi_init(void) {
     if(spi_initialized) {
@@ -25,4 +26,21 @@ bool spi_init(void) {
     spi_initialized=true;
     return true;
 }
+void spi_end() {
+    if(!spi_initialized) {
+        return;
+    }
+#ifdef SPI_PORT
+    spi_bus_free(SPI_PORT);
+    gpio_reset_pin((gpio_num_t)SPI_CLK);
+    gpio_reset_pin((gpio_num_t)SPI_MOSI);
+    gpio_reset_pin((gpio_num_t)SPI_MISO);
+    gpio_set_direction((gpio_num_t)SPI_CLK,GPIO_MODE_INPUT);
+    gpio_set_direction((gpio_num_t)SPI_MOSI,GPIO_MODE_INPUT);
+    gpio_set_direction((gpio_num_t)SPI_MISO,GPIO_MODE_INPUT);
+#endif
+
+    spi_initialized = false;
+}
+
 #endif

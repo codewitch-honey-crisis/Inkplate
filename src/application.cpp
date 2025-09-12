@@ -10,6 +10,10 @@
 #include "esp32/captive_portal.h"
 #include "esp32/ui_captive_portal.hpp"
 #endif
+#ifdef INKPLATE10V2
+#include "esp_sleep.h"
+#include "inkplate10/power.h"
+#endif
 #include "gfx.hpp"
 #include "uix.hpp"
 #include "httpd_application.h"
@@ -140,7 +144,12 @@ extern "C" void loop(void) {
             fetch_ts=timing_get_ms();
             if(!ui_weather_fetch()) {
                 puts("Could not fetch weather");
-            }
+            } 
+#ifdef INKPLATE10V2
+            esp_sleep_enable_timer_wakeup(1*60*1000000);
+            power_sleep();
+#endif
+
         }
     }
     task_delay(5);

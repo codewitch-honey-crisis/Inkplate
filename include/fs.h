@@ -6,6 +6,7 @@
 extern "C" {
 #endif
 bool fs_external_init(void);
+void fs_external_end(void);
 bool fs_internal_init(void);
 bool fs_get_device_id(char* out_id, size_t out_id_length);
 #ifdef __cplusplus

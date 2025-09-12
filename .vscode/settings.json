@@ -2,6 +2,7 @@
     "files.associations": {
         "memory.h": "c",
         "hardware.h": "c",
-        "gpio_reg.h": "c"
+        "gpio_reg.h": "c",
+        "stdbool.h": "c"
     }
 }
