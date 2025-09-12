@@ -6,6 +6,7 @@
 #include "esp_wifi.h"
 #include "nvs_flash.h"
 #include "fs.h"
+#define WIFI_RETRY_COUNT 6
 static esp_ip4_addr_t wifi_ip;
 static size_t wifi_retry_count = 0;
 static const EventBits_t wifi_connected_bit = BIT0;
@@ -21,7 +22,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         esp_wifi_connect();
     } else if (event_base == WIFI_EVENT &&
                event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        if (wifi_retry_count < 3) {
+        if (wifi_retry_count < WIFI_RETRY_COUNT) {
             ESP_LOGI(TAG,"Disconnected from AP, retrying");
             ++wifi_retry_count;
             esp_wifi_connect();
