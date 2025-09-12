@@ -1053,7 +1053,9 @@ bool display_clean_3bit_async(void) {
     if(washed) {
         return true;
     }
-    if(NULL!=task_init(panel_clean_3bit_task,2048,1-xTaskGetCoreID(xTaskGetCurrentTaskHandle()),NULL)) {
+    TaskHandle_t th;
+    xTaskCreatePinnedToCore(panel_clean_3bit_task,"clean_task",2048,NULL,2,&th,1-xTaskGetCoreID(xTaskGetCurrentTaskHandle()));
+    if(NULL!=th) {
         return true;
     }
     return false;
@@ -1070,6 +1072,12 @@ void display_clean_3bit_wait(void) {
         }
         task_delay(5);
     }
+}
+bool display_washed(void) {
+    task_mutex_lock(clean_mutex,-1);
+    bool result = washed;
+    task_mutex_unlock(clean_mutex);
+    return result;
 }
 
 #endif  // INKPLATE10

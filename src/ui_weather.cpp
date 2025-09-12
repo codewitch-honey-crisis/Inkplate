@@ -483,14 +483,16 @@ bool ui_weather_fetch() {
                     }
                 }
             }
-            display_clean_3bit_async();
+            if(!display_washed()) {
+                puts("Screen wash started");
+                display_clean_3bit_async();
+            }
+            puts("UI update started");
             weather_screen.update();
-            uint32_t ui_update_ms = timing_get_ms()-start_ts-fetch_time_ms;
-            printf("UI update time: %ldms\n",ui_update_ms);
+            puts("UI updated");
             display_clean_3bit_wait();
+            puts("Screen wash completed");
             if(display_update_3bit()) {
-                uint32_t ui_total_ms = timing_get_ms()-start_ts;
-                printf("Weather update total time: %ldms\n",ui_total_ms);
                 display_sleep();
                 return true;
             }

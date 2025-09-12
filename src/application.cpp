@@ -48,13 +48,20 @@ static void on_button_changed(bool pressed, void* state) {
         fetch_ts=0;
     }
 }
+static uint32_t start_ts;
 extern "C" void run(void) {
+    puts("Update starting");
+    start_ts = timing_get_ms();
     if(!fs_internal_init()) {
         puts("FS init failed");
     }
     if(!display_init()) {
         puts("Display init failed");
         return;
+    }
+    puts("Screen wash started");
+    if(!display_clean_3bit_async()) {
+        puts("Warning: Screen wash failed. Continuing...");
     }
     if(!button_init()) {
         puts("BUtton init failed");
@@ -141,11 +148,17 @@ extern "C" void loop(void) {
     button_update();
     if(net_status()==NET_CONNECTED) {
         if(fetch_ts==0 || timing_get_ms()>=fetch_ts+10*60*1000) {
+            if(fetch_ts!=0) {
+                puts("Update starting");
+                start_ts = timing_get_ms();
+            }
             fetch_ts=timing_get_ms();
             
             if(!ui_weather_fetch()) {
                 puts("Could not fetch weather");
-            } 
+            } else {
+                printf("Update completed in %0.2f seconds\n",(timing_get_ms()-start_ts)/1000.f);
+            }
 #ifdef INKPLATE10V2
             esp_sleep_enable_timer_wakeup(10*60*1000000);
             power_sleep();
