@@ -146,7 +146,7 @@ extern "C" void loop(void) {
                 puts("Could not fetch weather");
             } 
 #ifdef INKPLATE10V2
-            esp_sleep_enable_timer_wakeup(1*60*1000000);
+            esp_sleep_enable_timer_wakeup(10*60*1000000);
             power_sleep();
 #endif
 
