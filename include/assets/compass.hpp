@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include "gfx_core.hpp"
 
-#define COMPASS_DIMENSIONS {600, 600}
+const constexpr gfx::size16 compass_dimensions(600, 600);
 
 /// @brief A Scalable Vector Graphic
 extern gfx::const_buffer_stream compass;

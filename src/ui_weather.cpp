@@ -162,7 +162,7 @@ bool ui_weather_init() {
     sr.offset_inplace(weather_screen.dimensions().width-weather_icon.dimensions().width,0);
     const float deflate = -screen_dimensions.width/100;
     weather_compass.bounds(sr.inflate(deflate,deflate));
-    weather_compass.svg_size(COMPASS_DIMENSIONS);
+    weather_compass.svg_size((sizef)compass_dimensions);
     weather_compass.svg(compass);
     weather_screen.register_control(weather_compass);
     weather_compass_needle.bounds(sr);
