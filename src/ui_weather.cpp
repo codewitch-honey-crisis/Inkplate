@@ -6,6 +6,7 @@
 #include "config.h"
 #include "display.h"
 #include "http.h"
+#include "timing.h"
 #include "http_stream.hpp"
 #include "json.hpp"
 #include "assets/connectivity.hpp"
@@ -162,7 +163,7 @@ bool ui_weather_init() {
     sr.offset_inplace(weather_screen.dimensions().width-weather_icon.dimensions().width,0);
     const float deflate = -screen_dimensions.width/100;
     weather_compass.bounds(sr.inflate(deflate,deflate));
-    weather_compass.svg_size((sizef)compass_dimensions);
+    weather_compass.svg_size(compass_dimensions);
     weather_compass.svg(compass);
     weather_screen.register_control(weather_compass);
     weather_compass_needle.bounds(sr);
@@ -301,7 +302,7 @@ bool ui_weather_init() {
         weather_screen.unregister_controls();
         return false;
     }
-    return true;    
+    return true;
 }
 static float to_fahrenheit(float celcius) {
     return celcius * (9.f/5.f) + 32.f;
@@ -316,6 +317,7 @@ static float to_psi(float mb) {
     return mb*0.0145038f;
 }
 bool ui_weather_fetch() {
+    uint32_t start_ts = timing_get_ms();
     if(weather_screen.dimensions().width==0) {
         return false;
     }
@@ -407,6 +409,8 @@ bool ui_weather_fetch() {
         }
         http_end(handle);
         if(success) {
+            uint32_t fetch_time_ms = timing_get_ms()-start_ts;
+            printf("Weather fetch time: %ldms\n",(long)fetch_time_ms);
             bool is_imperial = (0==strcmp(weather_units,"imperial") || (0==strcmp(weather_units,"auto") && 0==strcmp(weather_info.country,"USA")));
             weather_area_label.text(weather_info.area);
             weather_condition_label.text(weather_info.condition);
@@ -479,8 +483,14 @@ bool ui_weather_fetch() {
                     }
                 }
             }
+            display_clean_3bit_async();
             weather_screen.update();
+            uint32_t ui_update_ms = timing_get_ms()-start_ts-fetch_time_ms;
+            printf("UI update time: %ldms\n",ui_update_ms);
+            display_clean_3bit_wait();
             if(display_update_3bit()) {
+                uint32_t ui_total_ms = timing_get_ms()-start_ts;
+                printf("Weather update total time: %ldms\n",ui_total_ms);
                 display_sleep();
                 return true;
             }

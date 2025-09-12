@@ -35,6 +35,7 @@ IN THE SOFTWARE.
 #include "hardware.h"
 #include "nvs_flash.h"
 #include "pcal_ex.h"
+#include "task.h"
 #include "rom/gpio.h"
 #include "soc/gpio_periph.h"
 #include "soc/gpio_reg.h"
@@ -194,7 +195,8 @@ static uint8_t _blockPartial = 1;
 static uint32_t pinLUT[256];
 static uint32_t *GLUT;
 static uint32_t *GLUT2;
-
+static task_mutex_t clean_mutex = NULL;
+static bool washed = false;
 static uint16_t _partialUpdateLimiter = 0;
 static uint16_t _partialUpdateCounter = 0;
 static bool panel_enabled = false;
@@ -550,6 +552,10 @@ bool display_init(void) {
     if (display_initialized) {
         return true;
     }
+    clean_mutex = task_mutex_init();
+    if(clean_mutex==NULL) {
+        return false;
+    }
     if (!pcal_ex_init()) {
         return false;
     }
@@ -560,15 +566,18 @@ bool display_init(void) {
         ret = nvs_flash_erase();
         if (ret != ESP_OK) {
             ESP_LOGE(TAG, "Could not erase NVS flash");
+            task_mutex_end(clean_mutex);
             return false;
         }
         ret = nvs_flash_init();
         if (ret != ESP_OK) {
             ESP_LOGE(TAG, "Could not init NVS flash");
+            task_mutex_end(clean_mutex);
             return false;
         }
     } else if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Could not init NVS flash");
+        task_mutex_end(clean_mutex);
         return false;
     }
     waveformStored.header = 'W';
@@ -658,6 +667,7 @@ bool display_init(void) {
 #endif
     pcal_ex_set_direction_int(9, OUTPUT);
     if(!pcal_ex_set_level_int(9, LOW)) {
+        task_mutex_end(clean_mutex);
         return false;
     }
 
@@ -670,6 +680,7 @@ bool display_init(void) {
         ESP_LOGE(TAG,"Out of memory allocating partial update frame buffer");
         free(DMemoryNew);
         DMemoryNew = NULL;
+        task_mutex_end(clean_mutex);
         return false;
     }
     _pBuffer = (uint8_t *)heap_caps_malloc(E_INK_WIDTH * E_INK_HEIGHT / 4,MALLOC_CAP_SPIRAM);
@@ -679,6 +690,7 @@ bool display_init(void) {
         DMemoryNew = NULL;
         free(_partial);
         _partial = NULL;
+        task_mutex_end(clean_mutex);
         return false;
     }
     DMemory4Bit = (uint8_t *)heap_caps_malloc(E_INK_WIDTH * E_INK_HEIGHT / 2,MALLOC_CAP_SPIRAM);
@@ -690,6 +702,7 @@ bool display_init(void) {
         _partial = NULL;
         free(_pBuffer);
         _pBuffer=NULL;
+        task_mutex_end(clean_mutex);
         return false;
     }
     GLUT = (uint32_t *)malloc(256 * 9 * sizeof(uint32_t));
@@ -703,6 +716,7 @@ bool display_init(void) {
         _pBuffer=NULL;
         free(DMemory4Bit);
         DMemory4Bit = NULL;
+        task_mutex_end(clean_mutex);
         return false;
     }
     GLUT2 = (uint32_t *)malloc(256 * 9 * sizeof(uint32_t));
@@ -718,6 +732,7 @@ bool display_init(void) {
         DMemory4Bit = NULL;
         free(GLUT);
         GLUT = NULL;
+        task_mutex_end(clean_mutex);
         return false;
     }
    
@@ -730,6 +745,7 @@ bool display_init(void) {
     display_initialized = true;
     return true;
 }
+
 static bool panel_update_1bit(void)
 {
     memcpy(DMemoryNew, _partial, E_INK_WIDTH * E_INK_HEIGHT / 8);
@@ -739,9 +755,6 @@ static bool panel_update_1bit(void)
     uint8_t dram;
     uint8_t _repeat;
 
-    if (!panel_on()) {
-        return false;
-    }
     if (waveformStored.waveformId != INKPLATE10_WAVEFORM1)
     {
         panel_clean(0, 1);
@@ -913,11 +926,8 @@ int32_t panel_partial_update_1bit(bool _forced)
         _partialUpdateCounter++;
     return changeCount;
 }
-static bool panel_update_3bit(void)
-{
-    if (!panel_on())
-        return false;
-
+static void panel_clean_3bit_task(void* arg) {
+    task_mutex_lock(clean_mutex,-1);
     if (waveformStored.waveformId != INKPLATE10_WAVEFORM1)
     {
         panel_clean(1, 1);
@@ -941,6 +951,40 @@ static bool panel_update_3bit(void)
         panel_clean(1, 10);
     }
 
+    washed = true;
+
+    task_mutex_unlock(clean_mutex);
+    vTaskDelete(NULL);
+}
+static bool panel_update_3bit(void)
+{
+    if (!panel_on())
+        return false;
+    if(!washed) {
+        if (waveformStored.waveformId != INKPLATE10_WAVEFORM1)
+        {
+            panel_clean(1, 1);
+            panel_clean(0, 7);
+            panel_clean(2, 1);
+            panel_clean(1, 12);
+            panel_clean(2, 1);
+            panel_clean(0, 7);
+            panel_clean(2, 1);
+            panel_clean(1, 12);
+        }
+        else
+        {
+            panel_clean(1, 1);
+            panel_clean(0, 10);
+            panel_clean(2, 1);
+            panel_clean(1, 10);
+            panel_clean(2, 1);
+            panel_clean(0, 10);
+            panel_clean(2, 1);
+            panel_clean(1, 10);
+        }
+    }
+    washed = false;
     for (int k = 0; k < 9; k++)
     {
         uint8_t *dp = DMemory4Bit + (E_INK_HEIGHT * E_INK_WIDTH / 2);
@@ -1005,4 +1049,27 @@ size_t display_buffer_1bit_size() {
 uint8_t* display_buffer_1bit() {
     return _partial;
 }
+bool display_clean_3bit_async(void) {
+    if(washed) {
+        return true;
+    }
+    if(NULL!=task_init(panel_clean_3bit_task,2048,1-xTaskGetCoreID(xTaskGetCurrentTaskHandle()),NULL)) {
+        return true;
+    }
+    return false;
+}
+void display_clean_3bit_wait(void) {
+    if(washed) {
+        return;
+    }
+    while(true) {
+        task_mutex_lock(clean_mutex,-1);
+        if(washed) {
+            task_mutex_unlock(clean_mutex);
+            return;
+        }
+        task_delay(5);
+    }
+}
+
 #endif  // INKPLATE10

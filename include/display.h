@@ -36,6 +36,8 @@ size_t display_buffer_3bit_size(void);
 /// @brief Gets the display buffer for the 3bit grayscale
 /// @return A pointer to the buffer
 uint8_t* display_buffer_3bit(void);
+bool display_clean_3bit_async(void);
+void display_clean_3bit_wait(void);
 /// @brief Sends the current frame buffer to the display
 /// @return True if successful, otherwise false
 bool display_update_1bit(void);
