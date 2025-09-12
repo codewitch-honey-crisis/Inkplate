@@ -9,3 +9,4 @@ react-web/build
 data/id.txt
 data/location.txt
 data/wifi.txt
+.vscode/arduino.json
