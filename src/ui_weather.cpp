@@ -493,8 +493,8 @@ bool ui_weather_fetch() {
             puts("UI update started");
             weather_screen.update();
             puts("UI updated");
-            display_clean_3bit_wait();
             if(washing) {
+                display_clean_3bit_wait();
                 puts("Screen wash completed");
             }
             if(display_update_3bit()) {
