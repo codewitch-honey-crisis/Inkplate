@@ -87,12 +87,12 @@ protected:
         gfx::canvas_style si = destination.style();
         si.fill_paint_type = gfx::paint_type::solid;
         si.stroke_paint_type = gfx::paint_type::none;
-        si.fill_color = gfx::vector_pixel(255,127,127,127);
+        si.fill_color = gfx::vector_pixel(255,0,0,0);
         destination.style(si);
         destination.path(m_path);
         destination.render();
         si.fill_paint_type = gfx::paint_type::none;
-        si.stroke_color = gfx::vector_pixel(255,127,127,127);
+        si.stroke_color = gfx::vector_pixel(255,0,0,0);
         si.stroke_paint_type = gfx::paint_type::solid;
         si.stroke_width = 2;
         destination.style(si);
