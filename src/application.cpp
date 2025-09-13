@@ -159,7 +159,7 @@ extern "C" void loop(void) {
             printf("Network connected in %0.2f seconds\n",(timing_get_ms()-net_start_ts)/1000.f);
             net_start_ts=0;
         }
-        if(fetch_ts==0 || timing_get_ms()>=fetch_ts+10*60*1000) {
+        if(fetch_ts==0 || timing_get_ms()>=fetch_ts+15*60*1000) {
             if(fetch_ts!=0) {
                 puts("Update starting");
                 start_ts = timing_get_ms();
@@ -172,7 +172,7 @@ extern "C" void loop(void) {
                 printf("Update completed in %0.2f seconds\n",(timing_get_ms()-start_ts)/1000.f);
             }
 #ifdef INKPLATE10V2
-            esp_sleep_enable_timer_wakeup(10*60*1000000);
+            esp_sleep_enable_timer_wakeup(15*60*1000000);
             power_sleep();
 #endif
 
