@@ -479,9 +479,17 @@ long ui_weather_fetch() {
             weather_updated_label.text(weather_info.last_updated);
             weather_compass_needle.angle(wind_angle);
             if (is_imperial) {
-                sprintf(weather_info.temp, "%0.1fF (feels %0.1fF)", to_fahrenheit(temp_c), to_fahrenheit(feels_c));
+                if(temp_c!=feels_c) {
+                    sprintf(weather_info.temp, "%0.1fF (feels %0.1fF)", to_fahrenheit(temp_c), to_fahrenheit(feels_c));
+                } else {
+                    sprintf(weather_info.temp, "%0.1fF", to_fahrenheit(temp_c));
+                }
             } else {
-                sprintf(weather_info.temp, "%0.1fC (feels %0.1fC)", temp_c, feels_c);
+                if(temp_c!=feels_c) {
+                    sprintf(weather_info.temp, "%0.1fC (feels %0.1fC)", temp_c, feels_c);
+                } else {
+                    sprintf(weather_info.temp, "%0.1fC", temp_c);
+                }
             }
             weather_temp_label.text(weather_info.temp);
             
