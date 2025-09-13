@@ -534,8 +534,11 @@ long ui_weather_fetch() {
                         weather_icon.svg(weather_cloud_rain);
                     }
                 } else {
-                    if (cloud >= 25) {
+                    if(cloud>=75) {
                         weather_icon.svg(weather_cloud);
+                    }
+                    if (cloud >= 25) {
+                        weather_icon.svg(weather_cloud_sun);
                     } else {
                         weather_icon.svg(weather_sun);
                     }
