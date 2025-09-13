@@ -1,30 +1,34 @@
 #include "ui_weather.hpp"
-#include <time.h>
+
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
+
+#include "assets/compass.hpp"
+#include "assets/connectivity.hpp"
+#include "assets/weather.hpp"
 #include "config.h"
 #include "display.h"
 #include "http.h"
-#include "timing.h"
 #include "http_stream.hpp"
 #include "json.hpp"
-#include "assets/connectivity.hpp"
-#include "assets/weather.hpp"
-#include "assets/compass.hpp"
+#include "timing.h"
 using namespace gfx;
 using namespace uix;
 using namespace json;
 using label_t = vlabel<surface_gsc_t>;
 using icon_t = icon_box<surface_gsc_t>;
 
-template<typename ControlSurfaceType>
+template <typename ControlSurfaceType>
 class needle : public canvas_control<ControlSurfaceType> {
     using base_type = uix::canvas_control<ControlSurfaceType>;
-public:
+
+   public:
     using type = needle;
     using control_surface_type = ControlSurfaceType;
-private:
+
+   private:
     float m_angle;
     canvas_path m_path;
     pointf m_end;
@@ -40,11 +44,11 @@ private:
         float ry = (stheta * (x - (float)center.x) + ctheta * (y - (float)center.y) + (float)center.y) + offset.y;
         return {(float)rx, (float)ry};
     }
-public:
-    needle() : base_type() ,m_angle(0),m_path_dirty(true) {
+
+   public:
+    needle() : base_type(), m_angle(0), m_path_dirty(true) {
     }
     virtual ~needle() {
-
     }
     float angle() const {
         return m_angle;
@@ -54,25 +58,28 @@ public:
         m_path_dirty = true;
         this->invalidate();
     }
-protected:
+
+   protected:
     virtual void on_before_paint() override {
-        if(m_path_dirty) {
-            if(gfx_result::success!=m_path.initialize()) {
+        if (m_path_dirty) {
+            if (gfx_result::success != m_path.initialize()) {
                 return;
             }
             float w = this->dimensions().width;
             float h = this->dimensions().height;
-            if(w>h) { w= h; }
-            pointf center(w*.5f,w*.5f);
-            pointf offset(0,0);
+            if (w > h) {
+                w = h;
+            }
+            pointf center(w * .5f, w * .5f);
+            pointf offset(0, 0);
             float ctheta, stheta;
             update_transform(m_angle, ctheta, stheta);
             m_path.clear();
             srect16 sr(0, w / 20, w / 20, w / 2);
             sr.center_horizontal_inplace(this->dimensions().bounds());
-            m_end = pointf(sr.x1 + sr.width() * 0.5f, sr.y1+(w/10.f));
-            m_radius = (w/10.f);
-            m_end = transform_point(ctheta, stheta, center, offset,m_end.x,m_end.y);
+            m_end = pointf(sr.x1 + sr.width() * 0.5f, sr.y1 + (w / 10.f));
+            m_radius = (w / 10.f);
+            m_end = transform_point(ctheta, stheta, center, offset, m_end.x, m_end.y);
             m_path.move_to(transform_point(ctheta, stheta, center, offset, sr.x1 + sr.width() * 0.5f, sr.y1));
             m_path.line_to(transform_point(ctheta, stheta, center, offset, sr.x2, sr.y2));
             m_path.line_to(transform_point(ctheta, stheta, center, offset, sr.x1 + sr.width() * 0.5f, sr.y2 + (w / 20)));
@@ -82,22 +89,22 @@ protected:
         }
     }
     virtual void on_paint(gfx::canvas& destination, const gfx::srect16& clip) override {
-        if(m_path_dirty) {
+        if (m_path_dirty) {
             return;
         }
         gfx::canvas_style si = destination.style();
         si.fill_paint_type = gfx::paint_type::solid;
         si.stroke_paint_type = gfx::paint_type::none;
-        si.fill_color = gfx::vector_pixel(255,0,0,0);
+        si.fill_color = gfx::vector_pixel(255, 0, 0, 0);
         destination.style(si);
         destination.path(m_path);
         destination.render();
         si.fill_paint_type = gfx::paint_type::none;
-        si.stroke_color = gfx::vector_pixel(255,0,0,0);
+        si.stroke_color = gfx::vector_pixel(255, 0, 0, 0);
         si.stroke_paint_type = gfx::paint_type::solid;
         si.stroke_width = 2;
         destination.style(si);
-        destination.circle(m_end,m_radius-1);
+        destination.circle(m_end, m_radius - 1);
         destination.render();
     }
 };
@@ -122,7 +129,7 @@ typedef struct {
 static screen_gsc_t weather_screen;
 static char weather_units[64];
 static char weather_location[256];
-static const char* weather_api_url_part= "http://api.weatherapi.com/v1/current.json?key=f188c23cb291489389755443221206&aqi=no&q=";
+static const char* weather_api_url_part = "http://api.weatherapi.com/v1/current.json?key=f188c23cb291489389755443221206&aqi=no&q=";
 static char weather_api_url[1025];
 static weather_info_t weather_info;
 static icon_t weather_connected_icon;
@@ -145,53 +152,53 @@ static label_t weather_pressure_title_label;
 static label_t weather_pressure_label;
 
 bool ui_weather_init() {
-    weather_location[0]='\0';
-    weather_units[0]='\0';
+    weather_location[0] = '\0';
+    weather_units[0] = '\0';
     // uix uses signed coords
     weather_screen.update_mode(screen_update_mode::direct);
     weather_screen.buffer_size(display_buffer_8bit_size());
     weather_screen.buffer1(display_buffer_8bit());
     weather_screen.dimensions((ssize16)screen_dimensions);
     weather_screen.background_color(scolor_gsc_t::white);
-    
-    const float fheight = screen_dimensions.width/8.f;
-    const float ftheight = fheight/2.f;
-    weather_icon.bounds(srect16(spoint16::zero(),ssize16(screen_dimensions.width/8,screen_dimensions.width/8)));
+
+    const float fheight = screen_dimensions.width / 8.f;
+    const float ftheight = fheight / 2.f;
+    weather_icon.bounds(srect16(spoint16::zero(), ssize16(screen_dimensions.width / 8, screen_dimensions.width / 8)));
     weather_icon.svg_size(connectivity_wifi_dimensions);
     weather_icon.svg(connectivity_wifi);
     weather_screen.register_control(weather_icon);
     srect16 sr = weather_icon.bounds();
-    sr.offset_inplace(weather_screen.dimensions().width-weather_icon.dimensions().width,0);
-    const float deflate = -screen_dimensions.width/120;
-    weather_compass.bounds(sr.inflate(deflate,deflate));
+    sr.offset_inplace(weather_screen.dimensions().width - weather_icon.dimensions().width, 0);
+    const float deflate = -screen_dimensions.width / 120;
+    weather_compass.bounds(sr.inflate(deflate, deflate));
     weather_compass.svg_size(compass_dimensions);
     weather_compass.svg(compass);
     weather_screen.register_control(weather_compass);
     weather_compass_needle.bounds(sr);
     weather_screen.register_control(weather_compass_needle);
     sr = weather_icon.bounds();
-    sr.offset_inplace(weather_icon.dimensions().width+2,0);
-    sr.y2/=2;
-    sr.y2-=1;
+    sr.offset_inplace(weather_icon.dimensions().width + 2, 0);
+    sr.y2 /= 2;
+    sr.y2 -= 1;
     sr.x2 = weather_screen.bounds().x2;
     weather_area_label.bounds(sr);
     weather_area_label.font(text_font);
     constexpr static const uint8_t LP = .5f * 255;
     constexpr static const uint8_t L = .6666f * 255;
-    weather_area_label.color(rgba_pixel<32>(LP,LP,LP,255));
+    weather_area_label.color(rgba_pixel<32>(LP, LP, LP, 255));
     weather_area_label.text("Fetching...");
     weather_screen.register_control(weather_area_label);
 
-    sr.offset_inplace(0,sr.height()+2);
+    sr.offset_inplace(0, sr.height() + 2);
     weather_condition_label.bounds(sr);
     weather_condition_label.text("Fetching...");
     weather_condition_label.font(text_font);
     weather_condition_label.color(ucolor_t::black);
     weather_screen.register_control(weather_condition_label);
 
-    sr = srect16(0,weather_icon.bounds().y2+2,weather_screen.bounds().x2/2-1,weather_icon.bounds().y2+2+(fheight/2));
+    sr = srect16(0, weather_icon.bounds().y2 + 2, weather_screen.bounds().x2 / 2 - 1, weather_icon.bounds().y2 + 2 + (fheight / 2));
     weather_temp_title_label.bounds(sr);
-    weather_temp_title_label.background_color(rgba_pixel<32>(L,L,L,255));
+    weather_temp_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
     weather_temp_title_label.font(text_font);
     weather_temp_title_label.color(ucolor_t::white);
     weather_temp_title_label.text("TEMPERATURE");
@@ -199,26 +206,26 @@ bool ui_weather_init() {
     weather_temp_title_label.text_justify(uix_justify::center);
     weather_screen.register_control(weather_temp_title_label);
 
-    sr.offset_inplace(sr.width()+2,0);
+    sr.offset_inplace(sr.width() + 2, 0);
     weather_wind_title_label.bounds(sr);
-    weather_wind_title_label.background_color(rgba_pixel<32>(L,L,L,255));
+    weather_wind_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
     weather_wind_title_label.font(text_font);
     weather_wind_title_label.color(ucolor_t::white);
     weather_wind_title_label.text("WIND");
     weather_wind_title_label.font_size(ftheight);
     weather_wind_title_label.text_justify(uix_justify::center);
     weather_screen.register_control(weather_wind_title_label);
-    
-    sr = weather_temp_title_label.bounds().offset(0,weather_temp_title_label.dimensions().height+1);
-    sr.y2+=(fheight/2);
+
+    sr = weather_temp_title_label.bounds().offset(0, weather_temp_title_label.dimensions().height + 1);
+    sr.y2 += (fheight / 2);
     weather_temp_label.bounds(sr);
     weather_temp_label.text("Fetching...");
     weather_temp_label.font(text_font);
     weather_temp_label.color(ucolor_t::black);
     weather_screen.register_control(weather_temp_label);
 
-    sr = weather_wind_title_label.bounds().offset(0,weather_wind_title_label.dimensions().height+1);
-    sr.y2+=(fheight/2);
+    sr = weather_wind_title_label.bounds().offset(0, weather_wind_title_label.dimensions().height + 1);
+    sr.y2 += (fheight / 2);
     weather_wind_label.bounds(sr);
     weather_wind_label.text("Fetching...");
     weather_wind_label.font(text_font);
@@ -226,37 +233,37 @@ bool ui_weather_init() {
     weather_screen.register_control(weather_wind_label);
 
     sr = weather_temp_title_label.bounds();
-    sr.offset_inplace(0,(sr.height()*2)+(fheight/2));
+    sr.offset_inplace(0, (sr.height() * 2) + (fheight / 2));
     weather_precipitation_title_label.bounds(sr);
     weather_precipitation_title_label.text("PRECIPITATION");
     weather_precipitation_title_label.font(text_font);
-    weather_precipitation_title_label.background_color(rgba_pixel<32>(L,L,L,255));
+    weather_precipitation_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
     weather_precipitation_title_label.color(ucolor_t::white);
     weather_precipitation_title_label.text_justify(uix_justify::center);
     weather_precipitation_title_label.font_size(ftheight);
     weather_screen.register_control(weather_precipitation_title_label);
-    
-    sr.offset_inplace(sr.width()+2,0);
+
+    sr.offset_inplace(sr.width() + 2, 0);
     weather_humidity_title_label.bounds(sr);
     weather_humidity_title_label.text("HUMIDITY");
     weather_humidity_title_label.font(text_font);
-    weather_humidity_title_label.background_color(rgba_pixel<32>(L,L,L,255));
+    weather_humidity_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
     weather_humidity_title_label.color(ucolor_t::white);
     weather_humidity_title_label.text_justify(uix_justify::center);
     weather_humidity_title_label.font_size(ftheight);
     weather_screen.register_control(weather_humidity_title_label);
-    
+
     sr = weather_precipitation_title_label.bounds();
-    sr.y2+=(fheight/2);
-    sr.offset_inplace(0,weather_precipitation_title_label.dimensions().height+1);
+    sr.y2 += (fheight / 2);
+    sr.offset_inplace(0, weather_precipitation_title_label.dimensions().height + 1);
     weather_precipitation_label.bounds(sr);
     weather_precipitation_label.text("Fetching...");
     weather_precipitation_label.font(text_font);
     weather_precipitation_label.color(ucolor_t::black);
     weather_screen.register_control(weather_precipitation_label);
 
-    sr = weather_humidity_title_label.bounds().offset(0,weather_humidity_title_label.dimensions().height+1);
-    sr.y2+=(fheight/2);
+    sr = weather_humidity_title_label.bounds().offset(0, weather_humidity_title_label.dimensions().height + 1);
+    sr.y2 += (fheight / 2);
     weather_humidity_label.bounds(sr);
     weather_humidity_label.text("Fetching...");
     weather_humidity_label.font(text_font);
@@ -264,144 +271,144 @@ bool ui_weather_init() {
     weather_screen.register_control(weather_humidity_label);
 
     sr = weather_precipitation_title_label.bounds();
-    sr.offset_inplace(0,(sr.height()*2)+(fheight/2));
+    sr.offset_inplace(0, (sr.height() * 2) + (fheight / 2));
     weather_visibility_title_label.bounds(sr);
     weather_visibility_title_label.text("VISIBILITY");
     weather_visibility_title_label.font(text_font);
-    weather_visibility_title_label.background_color(rgba_pixel<32>(L,L,L,255));
+    weather_visibility_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
     weather_visibility_title_label.color(ucolor_t::white);
     weather_visibility_title_label.text_justify(uix_justify::center);
     weather_visibility_title_label.font_size(ftheight);
     weather_screen.register_control(weather_visibility_title_label);
-    
-    sr.offset_inplace(sr.width()+2,0);
+
+    sr.offset_inplace(sr.width() + 2, 0);
     weather_pressure_title_label.bounds(sr);
     weather_pressure_title_label.text("PRESSURE");
     weather_pressure_title_label.font(text_font);
-    weather_pressure_title_label.background_color(rgba_pixel<32>(L,L,L,255));
+    weather_pressure_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
     weather_pressure_title_label.color(ucolor_t::white);
     weather_pressure_title_label.text_justify(uix_justify::center);
     weather_pressure_title_label.font_size(ftheight);
     weather_screen.register_control(weather_pressure_title_label);
 
     sr = weather_visibility_title_label.bounds();
-    sr.y2+=(fheight/2);
-    sr.offset_inplace(0,weather_visibility_title_label.dimensions().height+1);
+    sr.y2 += (fheight / 2);
+    sr.offset_inplace(0, weather_visibility_title_label.dimensions().height + 1);
     weather_visibility_label.bounds(sr);
     weather_visibility_label.text("Fetching...");
     weather_visibility_label.font(text_font);
     weather_visibility_label.color(ucolor_t::black);
     weather_screen.register_control(weather_visibility_label);
 
-    sr = weather_pressure_title_label.bounds().offset(0,weather_pressure_title_label.dimensions().height+1);
-    sr.y2+=(fheight/2);
+    sr = weather_pressure_title_label.bounds().offset(0, weather_pressure_title_label.dimensions().height + 1);
+    sr.y2 += (fheight / 2);
     weather_pressure_label.bounds(sr);
     weather_pressure_label.text("Fetching...");
     weather_pressure_label.font(text_font);
     weather_pressure_label.color(ucolor_t::black);
-    if(uix_result::success!=weather_screen.register_control(weather_pressure_label)) {
+    if (uix_result::success != weather_screen.register_control(weather_pressure_label)) {
         weather_screen.unregister_controls();
         return false;
     }
     return true;
 }
 static float to_fahrenheit(float celcius) {
-    return celcius * (9.f/5.f) + 32.f;
+    return celcius * (9.f / 5.f) + 32.f;
 }
 static float to_miles(float km) {
-    return km*0.621371f;
+    return km * 0.621371f;
 }
 static float to_inches(float mm) {
-    return mm*0.0393701f;
+    return mm * 0.0393701f;
 }
 static float to_psi(float mb) {
-    return mb*0.0145038f;
+    return mb * 0.0145038f;
 }
 bool ui_weather_fetch() {
     uint32_t start_ts = timing_get_ms();
-    if(weather_screen.dimensions().width==0) {
+    if (weather_screen.dimensions().width == 0) {
         return false;
     }
-    if(weather_location[0]=='\0') {
-        if(!config_get_value("location",0,weather_location,sizeof(weather_location))) {
+    if (weather_location[0] == '\0') {
+        if (!config_get_value("location", 0, weather_location, sizeof(weather_location))) {
             return false;
         }
-        if(weather_location[0]=='\0') {
+        if (weather_location[0] == '\0') {
             return false;
         }
-        http_url_encode(weather_location,sizeof(weather_location),weather_location,http_enc_rfc3986);
-        strcpy(weather_api_url,weather_api_url_part);
-        strcat(weather_api_url,weather_location);
+        http_url_encode(weather_location, sizeof(weather_location), weather_location, http_enc_rfc3986);
+        strcpy(weather_api_url, weather_api_url_part);
+        strcat(weather_api_url, weather_location);
     }
-    if(weather_units[0]=='\0') {
-        if(!config_get_value("units",0,weather_units,sizeof(weather_units))) {
-            strcpy(weather_units,"auto");
+    if (weather_units[0] == '\0') {
+        if (!config_get_value("units", 0, weather_units, sizeof(weather_units))) {
+            strcpy(weather_units, "auto");
         }
     }
     http_handle_t handle = http_init(weather_api_url);
-    int status =  http_read_status_and_headers(handle);
+    int status = http_read_status_and_headers(handle);
     enum {
-        J_START=0,
+        J_START = 0,
         J_LOC,
         J_CUR
     };
-    if(status>=200 && status<=299) {
+    if (status >= 200 && status <= 299) {
         http_stream stm(handle);
         json_reader_ex<64> reader(stm);
-        //time_t last_update;
-        float temp_c=0, feels_c=0, wind_kph=0, precip_mm=0, gust_kph=0, vis_km=0,pressure_mb=0;
-        float wind_angle=0;
-        int humidity=0, cloud=0;
+        // time_t last_update;
+        float temp_c = 0, feels_c = 0, wind_kph = 0, precip_mm = 0, gust_kph = 0, vis_km = 0, pressure_mb = 0;
+        float wind_angle = 0;
+        int humidity = 0, cloud = 0;
         char wind_dir[16];
-        //char wind_gust[16];
-        wind_dir[0]='\0';
-        //wind_gust[0]='\0';
-        int state = J_START; 
+        // char wind_gust[16];
+        wind_dir[0] = '\0';
+        // wind_gust[0]='\0';
+        int state = J_START;
         bool success = false;
-        while(reader.read()) {
-            if(reader.depth()==1) {
-                if(reader.node_type()==json_node_type::field && 0==strcmp("location",reader.value())) {
+        while (reader.read()) {
+            if (reader.depth() == 1) {
+                if (reader.node_type() == json_node_type::field && 0 == strcmp("location", reader.value())) {
                     state = J_LOC;
-                } else if(reader.node_type()==json_node_type::field && 0==strcmp("current",reader.value())) {
+                } else if (reader.node_type() == json_node_type::field && 0 == strcmp("current", reader.value())) {
                     state = J_CUR;
                 }
             } else {
-                if(state==J_LOC) {
-                    if(reader.node_type()==json_node_type::field) {
-                        if(0==strcmp("name",reader.value()) && reader.read()) {
-                            strcpy(weather_info.area,reader.value());
-                        } else if(0==strcmp("country",reader.value()) && reader.read()) {
-                            strcpy(weather_info.country,reader.value());
+                if (state == J_LOC) {
+                    if (reader.node_type() == json_node_type::field) {
+                        if (0 == strcmp("name", reader.value()) && reader.read()) {
+                            strcpy(weather_info.area, reader.value());
+                        } else if (0 == strcmp("country", reader.value()) && reader.read()) {
+                            strcpy(weather_info.country, reader.value());
                         }
-                    }   
-                } else if(state==J_CUR) {
-                    if(reader.node_type()==json_node_type::field) {
+                    }
+                } else if (state == J_CUR) {
+                    if (reader.node_type() == json_node_type::field) {
                         success = true;
-                        if(0==strcmp("text",reader.value()) && reader.read()) {
-                            strcpy(weather_info.condition,reader.value());
-                        } else if(0==strcmp("is_day",reader.value()) && reader.read()) {
+                        if (0 == strcmp("text", reader.value()) && reader.read()) {
+                            strcpy(weather_info.condition, reader.value());
+                        } else if (0 == strcmp("is_day", reader.value()) && reader.read()) {
                             weather_info.is_day = reader.value_bool();
-                        } else if(0==strcmp("temp_c",reader.value()) && reader.read()) {
+                        } else if (0 == strcmp("temp_c", reader.value()) && reader.read()) {
                             temp_c = reader.value_real();
-                        } else if(0==strcmp("feelslike_c",reader.value()) && reader.read()) {
+                        } else if (0 == strcmp("feelslike_c", reader.value()) && reader.read()) {
                             feels_c = reader.value_real();
-                        } else if(0==strcmp("wind_kph",reader.value()) && reader.read()) {
+                        } else if (0 == strcmp("wind_kph", reader.value()) && reader.read()) {
                             wind_kph = reader.value_real();
-                        } else if(0==strcmp("wind_dir",reader.value()) && reader.read()) {
-                            strcpy(wind_dir,reader.value());
-                        } else if(0==strcmp("precip_mm",reader.value()) && reader.read()) {
+                        } else if (0 == strcmp("wind_dir", reader.value()) && reader.read()) {
+                            strcpy(wind_dir, reader.value());
+                        } else if (0 == strcmp("precip_mm", reader.value()) && reader.read()) {
                             precip_mm = reader.value_real();
-                        } else if(0==strcmp("humidity",reader.value()) && reader.read()) {
+                        } else if (0 == strcmp("humidity", reader.value()) && reader.read()) {
                             humidity = reader.value_int();
-                        } else if(0==strcmp("cloud",reader.value()) && reader.read()) {
+                        } else if (0 == strcmp("cloud", reader.value()) && reader.read()) {
                             cloud = reader.value_int();
-                        } else if(0==strcmp("gust_kph",reader.value()) && reader.read()) {
+                        } else if (0 == strcmp("gust_kph", reader.value()) && reader.read()) {
                             gust_kph = reader.value_real();
-                        } else if(0==strcmp("wind_degree",reader.value()) && reader.read()) {
-                            wind_angle = gfx::math::deg2rad((reader.value_int())%360);
-                        } else if(0==strcmp("vis_km",reader.value()) && reader.read()) {
+                        } else if (0 == strcmp("wind_degree", reader.value()) && reader.read()) {
+                            wind_angle = gfx::math::deg2rad((reader.value_int()) % 360);
+                        } else if (0 == strcmp("vis_km", reader.value()) && reader.read()) {
                             vis_km = reader.value_real();
-                        } else if(0==strcmp("pressure_mb",reader.value()) && reader.read()) {
+                        } else if (0 == strcmp("pressure_mb", reader.value()) && reader.read()) {
                             pressure_mb = reader.value_real();
                         }
                     }
@@ -409,75 +416,75 @@ bool ui_weather_fetch() {
             }
         }
         http_end(handle);
-        if(success) {
-            uint32_t fetch_time_ms = timing_get_ms()-start_ts;
-            printf("Weather fetch time: %ldms\n",(long)fetch_time_ms);
-            bool is_imperial = (0==strcmp(weather_units,"imperial") || (0==strcmp(weather_units,"auto") && 0==strcmp(weather_info.country,"USA")));
+        if (success) {
+            uint32_t fetch_time_ms = timing_get_ms() - start_ts;
+            printf("Weather fetch time: %ldms\n", (long)fetch_time_ms);
+            bool is_imperial = (0 == strcmp(weather_units, "imperial") || (0 == strcmp(weather_units, "auto") && 0 == strcmp(weather_info.country, "USA")));
             weather_area_label.text(weather_info.area);
             weather_condition_label.text(weather_info.condition);
             weather_compass_needle.angle(wind_angle);
-            if(is_imperial) {
-                sprintf(weather_info.temp,"%0.1fF (feels %0.1fF)",to_fahrenheit(temp_c),to_fahrenheit(feels_c));
+            if (is_imperial) {
+                sprintf(weather_info.temp, "%0.1fF (feels %0.1fF)", to_fahrenheit(temp_c), to_fahrenheit(feels_c));
             } else {
-                sprintf(weather_info.temp,"%0.1fC (feels %0.1fC)",temp_c,feels_c);
+                sprintf(weather_info.temp, "%0.1fC (feels %0.1fC)", temp_c, feels_c);
             }
             weather_temp_label.text(weather_info.temp);
-            if(is_imperial) {
-                snprintf(weather_info.wind,sizeof(weather_info.wind),"%s %0.1fMPH (gust %0.1fMPH)",wind_dir, to_miles(wind_kph),to_miles(gust_kph));
+            if (is_imperial) {
+                snprintf(weather_info.wind, sizeof(weather_info.wind), "%s %0.1fMPH (gust %0.1fMPH)", wind_dir, to_miles(wind_kph), to_miles(gust_kph));
             } else {
-                snprintf(weather_info.wind,sizeof(weather_info.wind),"%s %0.1fKPH (gust %0.1fKPH)",wind_dir,wind_kph,gust_kph);
+                snprintf(weather_info.wind, sizeof(weather_info.wind), "%s %0.1fKPH (gust %0.1fKPH)", wind_dir, wind_kph, gust_kph);
             }
             weather_wind_label.text(weather_info.wind);
-            if(precip_mm>0.f) {
-                if(is_imperial) {
-                    sprintf(weather_info.precipitation,"%0.2fin",to_inches(precip_mm));
+            if (precip_mm > 0.f) {
+                if (is_imperial) {
+                    sprintf(weather_info.precipitation, "%0.2fin", to_inches(precip_mm));
                 } else {
-                    sprintf(weather_info.precipitation,"%0.1fmm",precip_mm);
+                    sprintf(weather_info.precipitation, "%0.1fmm", precip_mm);
                 }
             } else {
-                sprintf(weather_info.precipitation,"n/a");
+                sprintf(weather_info.precipitation, "n/a");
             }
             weather_precipitation_label.text(weather_info.precipitation);
-            sprintf(weather_info.humidity,"%d%%",humidity);
+            sprintf(weather_info.humidity, "%d%%", humidity);
             weather_humidity_label.text(weather_info.humidity);
-            if(is_imperial) {
-                sprintf(weather_info.visibility,"%0.1fmi",to_miles(vis_km));
+            if (is_imperial) {
+                sprintf(weather_info.visibility, "%0.1fmi", to_miles(vis_km));
             } else {
-                sprintf(weather_info.visibility,"%0.1fkm",vis_km);
+                sprintf(weather_info.visibility, "%0.1fkm", vis_km);
             }
             weather_visibility_label.text(weather_info.visibility);
-            if(is_imperial) {
-                sprintf(weather_info.pressure,"%0.1fpsi",to_psi(pressure_mb));
+            if (is_imperial) {
+                sprintf(weather_info.pressure, "%0.1fpsi", to_psi(pressure_mb));
             } else {
-                sprintf(weather_info.pressure,"%0.1fmb",pressure_mb);
+                sprintf(weather_info.pressure, "%0.1fmb", pressure_mb);
             }
-            
+
             weather_pressure_label.text(weather_info.pressure);
-            if(precip_mm>250) {
+            if (precip_mm > 250) {
                 weather_icon.svg(weather_cloud_showers_heavy);
-            } else if(weather_info.is_day) {
-                if(precip_mm>.5f) {
-                    if(temp_c<=0.f) {
+            } else if (weather_info.is_day) {
+                if (precip_mm > .5f) {
+                    if (temp_c <= 0.f) {
                         weather_icon.svg(weather_snowflake);
                     } else {
                         weather_icon.svg(weather_cloud_rain);
                     }
                 } else {
-                    if(cloud>=25) {
+                    if (cloud >= 25) {
                         weather_icon.svg(weather_cloud);
                     } else {
                         weather_icon.svg(weather_sun);
                     }
                 }
             } else {
-                if(precip_mm>.5f) {
-                    if(temp_c<=0.f) {
+                if (precip_mm > .5f) {
+                    if (temp_c <= 0.f) {
                         weather_icon.svg(weather_snowflake);
                     } else {
                         weather_icon.svg(weather_cloud_moon_rain);
                     }
                 } else {
-                    if(cloud>=25) {
+                    if (cloud >= 25) {
                         weather_icon.svg(weather_cloud_moon);
                     } else {
                         weather_icon.svg(weather_moon);
@@ -485,18 +492,18 @@ bool ui_weather_fetch() {
                 }
             }
             bool washing = !display_washed();
-            if(washing) {
+            if (washing) {
                 display_wash_8bit_async();
             }
             uint32_t ui_start_ts = timing_get_ms();
             puts("UI update started");
             weather_screen.update();
-            printf("UI updated in %ldms\n",(long)(timing_get_ms()-ui_start_ts));
-            if(washing) {
+            printf("UI updated in %ldms\n", (long)(timing_get_ms() - ui_start_ts));
+            if (washing) {
                 display_wash_8bit_wait();
             }
             puts("Begin display panel transfer");
-            if(display_update_8bit()) {
+            if (display_update_8bit()) {
                 puts("End display panel transfer. Sleeping.");
                 display_sleep();
                 return true;
