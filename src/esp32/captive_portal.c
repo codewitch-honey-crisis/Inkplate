@@ -273,28 +273,23 @@ static void parse_url_and_apply(const char* url) {
                 break;
             }
             if(0==strcmp("ssid",name)) {
-                restart = true;
                 set_creds=true;
                 strncpy(ssid,value,63);
             }
             if(0==strcmp("pass",name)) {
                 set_creds = true;
-                restart = true;
                 strncpy(pass,value,63);
             }
             if(0==strcmp("tz",name)) {
                 set_tz=true;
-                restart = true;
                 strncpy(tz,value,63);
             }
             if(0==strcmp("units",name)) {
                 set_units=true;
-                restart = true;
                 strncpy(units,value,63);
             }
             if(0==strcmp("location",name)) {
                 set_location=true;
-                restart = true;
                 strncpy(location,value,63);
             }
         }
@@ -302,6 +297,7 @@ static void parse_url_and_apply(const char* url) {
     
     if(set_creds) {
         net_set_credentials(ssid,pass);
+        restart = true;
     }
     if(set_tz) {
         long ofs = 0;
@@ -323,6 +319,7 @@ static void parse_url_and_apply(const char* url) {
         restart=true;
     }
     if(restart) {
+        puts("Configuration saved. Restarting");
         esp_restart();
     }
 }

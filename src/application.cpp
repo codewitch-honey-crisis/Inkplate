@@ -1,9 +1,9 @@
 #include "display.h"
-#include "button.h"
 #include "task.h"
 #include "timing.h"
 #include "fs.h"
 #include "rtc_time.h"
+#include "hardware.h"
 #ifdef ESP_PLATFORM
 #include "rtc_wdt.h"
 #include "esp_task_wdt.h"
@@ -32,6 +32,7 @@ char address[129];
 static task_mutex_t dhcp_mutex;
 static int dhcp_connected = 0;
 static int dhcp_connected_old = -1;
+static bool start_portal = false;
 static void portal_on_connect(void* state) {
     task_mutex_lock(dhcp_mutex,-1);
     dhcp_connected = 1;
@@ -48,14 +49,19 @@ static void on_wash_complete(void* state) {
     printf("Screen wash complete in %0.2f seconds\n",(timing_get_ms()-wash_start_ts)/1000.f);
 }
 static uint32_t fetch_ts = 0;
-static void on_button_changed(bool pressed, void* state) {
-    if(!pressed) {
-        puts("released!");
-        fetch_ts=0;
-    }
-}
+
 extern "C" void run(void) {
 #ifdef ESP_PLATFORM
+   esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
+
+  switch (wakeup_reason) {
+    case ESP_SLEEP_WAKEUP_EXT0:
+        puts("Reseting configuration");
+        start_portal = true;
+        break;
+    default:
+        break;
+  }
     printf("Update starting. Free RAM: %0.2fKB\n", esp_get_free_heap_size()/1024.f);
 #endif
     start_ts = timing_get_ms();
@@ -66,22 +72,20 @@ extern "C" void run(void) {
         puts("Display init failed");
         return;
     }
-    display_on_washed_complete_callback(on_wash_complete,NULL);
-    puts("Screen wash started");
-    wash_start_ts = timing_get_ms();
-    if(!display_wash_8bit_async()) {
-        puts("Warning: Screen wash failed. Continuing...");
+    if(!start_portal) {
+        display_on_washed_complete_callback(on_wash_complete,NULL);
+        puts("Screen wash started");
+        wash_start_ts = timing_get_ms();
+        if(!display_wash_8bit_async()) {
+            puts("Warning: Screen wash failed. Continuing...");
+        }    
     }
-    if(!button_init()) {
-        puts("BUtton init failed");
-        return;
-    }
+    
     if(!rtc_time_init()) {
         puts("RTC init failed");
         return;
     }
-    button_on_press_changed_callback(on_button_changed,nullptr);
-    if(net_init()) {
+    if(!start_portal && net_init()) {
         net_start_ts=timing_get_ms();
         while(net_status()==NET_WAITING) {
             timing_delay_ms(5);
@@ -90,7 +94,9 @@ extern "C" void run(void) {
             puts("Could not connect to network");    
         }
     } else {
-        puts("Could not initialize network");
+        if(!start_portal) {
+            puts("Could not initialize network");
+        }
     }
     if(net_status()!=NET_CONNECTED) {
         net_end();
@@ -156,7 +162,6 @@ extern "C" void run(void) {
 }
 extern "C" void loop(void) {
     long next_update = 15*60;
-    button_update();
     if(net_status()==NET_CONNECTED) {
         if(net_start_ts!=0) {
             printf("Network connected in %0.2f seconds\n",(timing_get_ms()-net_start_ts)/1000.f);
@@ -176,6 +181,7 @@ extern "C" void loop(void) {
             }
 #ifdef INKPLATE10V2
             printf("Update finished. Free RAM: %0.2fKB\n", esp_get_free_heap_size()/1024.f);
+            esp_sleep_enable_ext0_wakeup((gpio_num_t)BUTTON_A, 0);
             esp_sleep_enable_timer_wakeup(next_update*1000000);
             power_sleep();
 #endif
