@@ -30,17 +30,17 @@ bool display_init(void);
 bool display_sleep(void);
 /// @brief Sends the current frame buffer to the display
 /// @return True if successful, otherwise false
-bool display_update_3bit(void);
-/// @brief Gets the size of the 3bit grayscale buffer
+bool display_update_8bit(void);
+/// @brief Gets the size of the 8bit grayscale buffer
 /// @return The size in bytes
-size_t display_buffer_3bit_size(void);
-/// @brief Gets the display buffer for the 3bit grayscale
+size_t display_buffer_8bit_size(void);
+/// @brief Gets the display buffer for the 8bit grayscale
 /// @return A pointer to the buffer
-uint8_t* display_buffer_3bit(void);
+uint8_t* display_buffer_8bit(void);
 bool display_washed(void);
 void display_on_washed_complete_callback(display_on_wash_complete_callback_t callback, void* state);
-bool display_wash_3bit_async(void);
-void display_wash_3bit_wait(void);
+bool display_wash_8bit_async(void);
+void display_wash_8bit_wait(void);
 /// @brief Sends the current frame buffer to the display
 /// @return True if successful, otherwise false
 bool display_update_1bit(void);

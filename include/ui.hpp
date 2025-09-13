@@ -6,27 +6,28 @@ extern gfx::const_buffer_stream& text_font;
 constexpr static const gfx::size16 screen_dimensions = {1200, 825};
 #endif
 // for the grayscale mode
-using gsc3_pixel_t = gfx::pixel<
-    // unused bit
-    gfx::channel_traits<gfx::channel_name::nop,1>, 
-    // 3 bits (L)uminosity channel
-    gfx::channel_traits<gfx::channel_name::L,3>
->;
+// using gsc_pixel_t = gfx::pixel<
+//     // unused bit
+//     gfx::channel_traits<gfx::channel_name::nop,1>, 
+//     // 3 bits (L)uminosity channel
+//     gfx::channel_traits<gfx::channel_name::L,3>
+// >;
+using gsc_pixel_t = gfx::gsc_pixel<8>;
 // for the mono mode
-using gsc1_pixel_t = gfx::gsc_pixel<1>;
+using mono_pixel_t = gfx::gsc_pixel<1>;
 // screen colors
-using scolor3_t = gfx::color<gsc3_pixel_t>;
-using scolor1_t = gfx::color<gsc1_pixel_t>;
+using scolor_gsc_t = gfx::color<gsc_pixel_t>;
+using scolor_mono_t = gfx::color<mono_pixel_t>;
 // UI colors (UIX)
 using ucolor_t = gfx::color<gfx::rgba_pixel<32>>;
 // vector graphics colors
 using vcolor_t = gfx::color<gfx::vector_pixel>;
 
-using screen3_t = uix::screen<gsc3_pixel_t>;
-using surface3_t = screen3_t::control_surface_type;
+using screen_gsc_t = uix::screen<gsc_pixel_t>;
+using surface_gsc_t = screen_gsc_t::control_surface_type;
 
-using screen1_t = uix::screen<gsc1_pixel_t>;
-using surface1_t = screen1_t::control_surface_type;
+using screen_mono_t = uix::screen<mono_pixel_t>;
+using surface_mono_t = screen_mono_t::control_surface_type;
 
 template<typename ControlSurfaceType>
 class vlabel : public uix::canvas_control<ControlSurfaceType> {

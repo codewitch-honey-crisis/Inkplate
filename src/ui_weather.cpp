@@ -15,8 +15,8 @@
 using namespace gfx;
 using namespace uix;
 using namespace json;
-using label3_t = vlabel<surface3_t>;
-using icon3_t = icon_box<surface3_t>;
+using label_t = vlabel<surface_gsc_t>;
+using icon_t = icon_box<surface_gsc_t>;
 
 template<typename ControlSurfaceType>
 class needle : public canvas_control<ControlSurfaceType> {
@@ -101,7 +101,7 @@ protected:
         destination.render();
     }
 };
-using needle3_t = needle<surface3_t>;
+using needle_t = needle<surface_gsc_t>;
 
 typedef struct {
     char area[64];
@@ -119,40 +119,40 @@ typedef struct {
     char cloud_coverage[8];
 } weather_info_t;
 
-static screen3_t weather_screen;
+static screen_gsc_t weather_screen;
 static char weather_units[64];
 static char weather_location[256];
 static const char* weather_api_url_part= "http://api.weatherapi.com/v1/current.json?key=f188c23cb291489389755443221206&aqi=no&q=";
 static char weather_api_url[1025];
 static weather_info_t weather_info;
-static icon3_t weather_connected_icon;
-static icon3_t weather_icon;
-static icon3_t weather_compass;
-static needle3_t weather_compass_needle;
-static label3_t weather_area_label;
-static label3_t weather_condition_label;
-static label3_t weather_temp_title_label;
-static label3_t weather_temp_label;
-static label3_t weather_wind_title_label;
-static label3_t weather_wind_label;
-static label3_t weather_precipitation_title_label;
-static label3_t weather_precipitation_label;
-static label3_t weather_humidity_title_label;
-static label3_t weather_humidity_label;
-static label3_t weather_visibility_title_label;
-static label3_t weather_visibility_label;
-static label3_t weather_pressure_title_label;
-static label3_t weather_pressure_label;
+static icon_t weather_connected_icon;
+static icon_t weather_icon;
+static icon_t weather_compass;
+static needle_t weather_compass_needle;
+static label_t weather_area_label;
+static label_t weather_condition_label;
+static label_t weather_temp_title_label;
+static label_t weather_temp_label;
+static label_t weather_wind_title_label;
+static label_t weather_wind_label;
+static label_t weather_precipitation_title_label;
+static label_t weather_precipitation_label;
+static label_t weather_humidity_title_label;
+static label_t weather_humidity_label;
+static label_t weather_visibility_title_label;
+static label_t weather_visibility_label;
+static label_t weather_pressure_title_label;
+static label_t weather_pressure_label;
 
 bool ui_weather_init() {
     weather_location[0]='\0';
     weather_units[0]='\0';
     // uix uses signed coords
     weather_screen.update_mode(screen_update_mode::direct);
-    weather_screen.buffer_size(display_buffer_3bit_size());
-    weather_screen.buffer1(display_buffer_3bit());
+    weather_screen.buffer_size(display_buffer_8bit_size());
+    weather_screen.buffer1(display_buffer_8bit());
     weather_screen.dimensions((ssize16)screen_dimensions);
-    weather_screen.background_color(scolor3_t::white);
+    weather_screen.background_color(scolor_gsc_t::white);
     const float fheight = screen_dimensions.width/8.f;
     const float ftheight = fheight/2.f;
     weather_icon.bounds(srect16(spoint16::zero(),ssize16(screen_dimensions.width/8,screen_dimensions.width/8)));
@@ -485,15 +485,18 @@ bool ui_weather_fetch() {
             }
             bool washing = !display_washed();
             if(washing) {
-                display_wash_3bit_async();
+                display_wash_8bit_async();
             }
+            uint32_t ui_start_ts = timing_get_ms();
             puts("UI update started");
             weather_screen.update();
-            puts("UI updated");
+            printf("UI updated in %ldms\n",(long)(timing_get_ms()-ui_start_ts));
             if(washing) {
-                display_wash_3bit_wait();
+                display_wash_8bit_wait();
             }
-            if(display_update_3bit()) {
+            puts("Begin display panel transfer");
+            if(display_update_8bit()) {
+                puts("End display panel transfer. Sleeping.");
                 display_sleep();
                 return true;
             }

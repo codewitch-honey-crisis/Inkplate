@@ -5,26 +5,26 @@
 using namespace gfx;
 using namespace uix;
 
-using label1_t = vlabel<surface1_t>;
-using qr1_t = qrcode<surface1_t>;
+using label_t = vlabel<surface_mono_t>;
+using qr_t = qrcode<surface_mono_t>;
 
 static char setup_qr_creds[256];
 static char setup_url[128+5];
 static char setup_ssid[65+6];
 static char setup_pass[129+6];
-static screen1_t setup_screen;
-static label1_t setup_label;
-static label1_t setup_cred_url_label;
-static label1_t setup_cred_ssid_label;
-static label1_t setup_cred_pass_label;
-static qr1_t setup_qr;
+static screen_mono_t setup_screen;
+static label_t setup_label;
+static label_t setup_cred_url_label;
+static label_t setup_cred_ssid_label;
+static label_t setup_cred_pass_label;
+static qr_t setup_qr;
 
 static const constexpr size_t xfer_buffer_size = (screen_dimensions.width*screen_dimensions.height+79)/80;
 static uint8_t* xfer_buffer = NULL;
 
 static void setup_flush(const rect16& bounds, const void* bmp, void* state) {
-    const_bitmap<gsc1_pixel_t> src(bounds.dimensions(),bmp);
-    bitmap<gsc1_pixel_t> dst(screen_dimensions,display_buffer_1bit());
+    const_bitmap<mono_pixel_t> src(bounds.dimensions(),bmp);
+    bitmap<mono_pixel_t> dst(screen_dimensions,display_buffer_1bit());
     draw::bitmap(dst,bounds,src,src.bounds());
     setup_screen.flush_complete();
 }
@@ -46,7 +46,7 @@ bool ui_captive_portal_init() {
     setup_screen.buffer1(xfer_buffer);
     setup_screen.on_flush_callback(setup_flush);
     setup_screen.dimensions((ssize16)screen_dimensions);
-    setup_screen.background_color(scolor1_t::white);
+    setup_screen.background_color(scolor_mono_t::white);
     setup_label.bounds(srect16(0,0,setup_screen.bounds().x2,fheight+1));
     setup_label.font(text_font);
     setup_label.color(ucolor_t::black);

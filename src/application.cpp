@@ -64,7 +64,7 @@ extern "C" void run(void) {
     }
     display_on_washed_complete_callback(on_wash_complete,NULL);
     puts("Screen wash started");
-    if(!display_wash_3bit_async()) {
+    if(!display_wash_8bit_async()) {
         puts("Warning: Screen wash failed. Continuing...");
     }
     if(!button_init()) {

@@ -189,7 +189,7 @@ static bool display_initialized = false;
 
 static uint8_t *DMemoryNew = NULL;
 static uint8_t *_partial = NULL;
-static uint8_t *DMemory4Bit = NULL;
+static uint8_t *DMemory8Bit = NULL;
 static uint8_t *_pBuffer = NULL;
 static uint8_t _blockPartial = 1;
 static uint32_t pinLUT[256];
@@ -694,8 +694,8 @@ bool display_init(void) {
         task_mutex_end(clean_mutex);
         return false;
     }
-    DMemory4Bit = (uint8_t *)heap_caps_malloc(E_INK_WIDTH * E_INK_HEIGHT / 2,MALLOC_CAP_SPIRAM);
-    if(DMemory4Bit==NULL) {
+    DMemory8Bit = (uint8_t *)heap_caps_malloc(E_INK_WIDTH * E_INK_HEIGHT,MALLOC_CAP_SPIRAM);
+    if(DMemory8Bit==NULL) {
         ESP_LOGE(TAG,"Out of memory allocating 4bit frame buffer 2");
         free(DMemoryNew);
         DMemoryNew = NULL;
@@ -715,8 +715,8 @@ bool display_init(void) {
         _partial = NULL;
         free(_pBuffer);
         _pBuffer=NULL;
-        free(DMemory4Bit);
-        DMemory4Bit = NULL;
+        free(DMemory8Bit);
+        DMemory8Bit = NULL;
         task_mutex_end(clean_mutex);
         return false;
     }
@@ -729,8 +729,8 @@ bool display_init(void) {
         _partial = NULL;
         free(_pBuffer);
         _pBuffer=NULL;
-        free(DMemory4Bit);
-        DMemory4Bit = NULL;
+        free(DMemory8Bit);
+        DMemory8Bit = NULL;
         free(GLUT);
         GLUT = NULL;
         task_mutex_end(clean_mutex);
@@ -740,7 +740,7 @@ bool display_init(void) {
     memset(DMemoryNew, 0, E_INK_WIDTH * E_INK_HEIGHT / 8);
     memset(_partial, 0, E_INK_WIDTH * E_INK_HEIGHT / 8);
     memset(_pBuffer, 0, E_INK_WIDTH * E_INK_HEIGHT / 4);
-    memset(DMemory4Bit, 255, E_INK_WIDTH * E_INK_HEIGHT / 2);
+    memset(DMemory8Bit, 255, E_INK_WIDTH * E_INK_HEIGHT );
 
     calculate_luts();
     display_initialized = true;
@@ -927,7 +927,7 @@ int32_t panel_partial_update_1bit(bool _forced)
         _partialUpdateCounter++;
     return changeCount;
 }
-static void panel_clean_3bit_task(void* arg) {
+static void panel_clean_8bit_task(void* arg) {
     task_mutex_lock(clean_mutex,-1);
     if (waveformStored.waveformId != INKPLATE10_WAVEFORM1)
     {
@@ -959,7 +959,8 @@ static void panel_clean_3bit_task(void* arg) {
     task_mutex_unlock(clean_mutex);
     vTaskDelete(NULL);
 }
-static bool panel_update_3bit(void)
+#define RSHIFT (5)
+static bool panel_update_8bit(void)
 {
     if (!panel_on())
         return false;
@@ -994,27 +995,43 @@ static bool panel_update_3bit(void)
     washed = false;
     for (int k = 0; k < 9; k++)
     {
-        uint8_t *dp = DMemory4Bit + (E_INK_HEIGHT * E_INK_WIDTH / 2);
-
+        uint8_t *dp = DMemory8Bit + (E_INK_HEIGHT * E_INK_WIDTH);
+        
         vscan_start();
         for (int i = 0; i < E_INK_HEIGHT; i++)
         {
-            uint32_t t = GLUT2[k * 256 + (*(--dp))];
-            t |= GLUT[k * 256 + (*(--dp))];
+            uint8_t dpv = (*(--dp)>>RSHIFT);
+            dpv |= ((*(--dp)>>RSHIFT)<<4);
+            uint32_t t = GLUT2[k * 256 + (dpv)];
+            dpv = (*(--dp)>>RSHIFT);
+            dpv |= ((*(--dp)>>RSHIFT)<<4);
+            t |= GLUT[k * 256 + (dpv)];
             hscan_start(t);
-            t = GLUT2[k * 256 + (*(--dp))];
-            t |= GLUT[k * 256 + (*(--dp))];
+            dpv = (*(--dp)>>RSHIFT);
+            dpv |= ((*(--dp)>>RSHIFT)<<4);
+            t = GLUT2[k * 256 + (dpv)];
+            dpv = (*(--dp)>>RSHIFT);
+            dpv |= ((*(--dp)>>RSHIFT)<<4);
+            t |= GLUT[k * 256 + (dpv)];
             GPIO.out_w1ts = t | CL;
             GPIO.out_w1tc = DATA | CL;
 
             for (int j = 0; j < ((E_INK_WIDTH / 8) - 1); j++)
             {
-                t = GLUT2[k * 256 + (*(--dp))];
-                t |= GLUT[k * 256 + (*(--dp))];
+                dpv = (*(--dp)>>RSHIFT);
+                dpv |= ((*(--dp)>>RSHIFT)<<4);
+                t = GLUT2[k * 256 + (dpv)];
+                dpv = (*(--dp)>>RSHIFT);
+                dpv |= ((*(--dp)>>RSHIFT)<<4);
+                t |= GLUT[k * 256 + (dpv)];
                 GPIO.out_w1ts = t | CL;
                 GPIO.out_w1tc = DATA | CL;
-                t = GLUT2[k * 256 + (*(--dp))];
-                t |= GLUT[k * 256 + (*(--dp))];
+                dpv = (*(--dp)>>RSHIFT);
+                dpv |= ((*(--dp)>>RSHIFT)<<4);
+                t = GLUT2[k * 256 + (dpv)];
+                dpv = (*(--dp)>>RSHIFT);
+                dpv |= ((*(--dp)>>RSHIFT)<<4);
+                t |= GLUT[k * 256 + (dpv)];
                 GPIO.out_w1ts = t | CL;
                 GPIO.out_w1tc = DATA | CL;
             }
@@ -1032,17 +1049,17 @@ static bool panel_update_3bit(void)
     _blockPartial = true;
     return true;
 }
-bool display_update_3bit(void) {
-    return panel_update_3bit();
+bool display_update_8bit(void) {
+    return panel_update_8bit();
 }
 bool display_sleep(void) {
     return panel_off();
 }
-size_t display_buffer_3bit_size() {
-    return E_INK_WIDTH*E_INK_HEIGHT/2;
+size_t display_buffer_8bit_size() {
+    return E_INK_WIDTH*E_INK_HEIGHT;
 }
-uint8_t* display_buffer_3bit() {
-    return DMemory4Bit;
+uint8_t* display_buffer_8bit() {
+    return DMemory8Bit;
 }
 bool display_update_1bit(void) {
     return panel_update_1bit();
@@ -1056,18 +1073,18 @@ size_t display_buffer_1bit_size() {
 uint8_t* display_buffer_1bit() {
     return _partial;
 }
-bool display_wash_3bit_async(void) {
+bool display_wash_8bit_async(void) {
     if(washed) {
         return true;
     }
     TaskHandle_t th;
-    xTaskCreatePinnedToCore(panel_clean_3bit_task,"clean_task",2048,NULL,2,&th,1-xTaskGetCoreID(xTaskGetCurrentTaskHandle()));
+    xTaskCreatePinnedToCore(panel_clean_8bit_task,"clean_task",2048,NULL,2,&th,1-xTaskGetCoreID(xTaskGetCurrentTaskHandle()));
     if(NULL!=th) {
         return true;
     }
     return false;
 }
-void display_wash_3bit_wait(void) {
+void display_wash_8bit_wait(void) {
     if(washed) {
         return;
     }
