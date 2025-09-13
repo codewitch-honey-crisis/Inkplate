@@ -14,6 +14,7 @@
 #include "http_stream.hpp"
 #include "json.hpp"
 #include "timing.h"
+#include "rtc_time.h"
 using namespace gfx;
 using namespace uix;
 using namespace json;
@@ -138,6 +139,7 @@ static icon_t weather_compass;
 static needle_t weather_compass_needle;
 static label_t weather_area_label;
 static label_t weather_condition_label;
+static label_t weather_updated_label;
 static label_t weather_temp_title_label;
 static label_t weather_temp_label;
 static label_t weather_wind_title_label;
@@ -180,7 +182,7 @@ bool ui_weather_init() {
     sr.offset_inplace(weather_icon.dimensions().width + 2, 0);
     sr.y2 /= 2;
     sr.y2 -= 1;
-    sr.x2 = weather_screen.bounds().x2;
+    sr.x2 = weather_screen.bounds().x2/2;
     weather_area_label.bounds(sr);
     weather_area_label.font(text_font);
     constexpr static const uint8_t LP = .5f * 255;
@@ -195,6 +197,14 @@ bool ui_weather_init() {
     weather_condition_label.font(text_font);
     weather_condition_label.color(ucolor_t::black);
     weather_screen.register_control(weather_condition_label);
+
+    sr.offset_inplace(sr.width()+1,0);
+    sr.x2-=weather_compass_needle.dimensions().width;
+    weather_updated_label.bounds(sr);
+    weather_updated_label.text("Fetching...");
+    weather_updated_label.font(text_font);
+    weather_updated_label.color(ucolor_t::black);
+    weather_screen.register_control(weather_updated_label);
 
     sr = srect16(0, weather_icon.bounds().y2 + 2, weather_screen.bounds().x2 / 2 - 1, weather_icon.bounds().y2 + 2 + (fheight / 2));
     weather_temp_title_label.bounds(sr);
@@ -359,6 +369,7 @@ bool ui_weather_fetch() {
         float temp_c = 0, feels_c = 0, wind_kph = 0, precip_mm = 0, gust_kph = 0, vis_km = 0, pressure_mb = 0;
         float wind_angle = 0;
         int humidity = 0, cloud = 0;
+        time_t last_updated;
         char wind_dir[16];
         // char wind_gust[16];
         wind_dir[0] = '\0';
@@ -410,6 +421,8 @@ bool ui_weather_fetch() {
                             vis_km = reader.value_real();
                         } else if (0 == strcmp("pressure_mb", reader.value()) && reader.read()) {
                             pressure_mb = reader.value_real();
+                        } else if (0 == strcmp("last_updated_epoch", reader.value()) && reader.read()) {
+                            last_updated = (time_t)reader.value_int();
                         }
                     }
                 }
@@ -417,11 +430,19 @@ bool ui_weather_fetch() {
         }
         http_end(handle);
         if (success) {
+            
             uint32_t fetch_time_ms = timing_get_ms() - start_ts;
             printf("Weather fetch time: %ldms\n", (long)fetch_time_ms);
             bool is_imperial = (0 == strcmp(weather_units, "imperial") || (0 == strcmp(weather_units, "auto") && 0 == strcmp(weather_info.country, "USA")));
             weather_area_label.text(weather_info.area);
             weather_condition_label.text(weather_info.condition);
+            strcpy(weather_info.last_updated,"Updated: ");
+            long offs=0;
+            rtc_time_get_tz_offset(&offs);
+            last_updated += offs;
+            tm* t_tm= localtime(&last_updated);
+            strftime(weather_info.last_updated+strlen(weather_info.last_updated),32,"%I:%M %p",t_tm);
+            weather_updated_label.text(weather_info.last_updated);
             weather_compass_needle.angle(wind_angle);
             if (is_imperial) {
                 sprintf(weather_info.temp, "%0.1fF (feels %0.1fF)", to_fahrenheit(temp_c), to_fahrenheit(feels_c));
@@ -429,6 +450,7 @@ bool ui_weather_fetch() {
                 sprintf(weather_info.temp, "%0.1fC (feels %0.1fC)", temp_c, feels_c);
             }
             weather_temp_label.text(weather_info.temp);
+            
             if (is_imperial) {
                 snprintf(weather_info.wind, sizeof(weather_info.wind), "%s %0.1fMPH (gust %0.1fMPH)", wind_dir, to_miles(wind_kph), to_miles(gust_kph));
             } else {
