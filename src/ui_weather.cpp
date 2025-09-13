@@ -334,17 +334,17 @@ static float to_inches(float mm) {
 static float to_psi(float mb) {
     return mb * 0.0145038f;
 }
-bool ui_weather_fetch() {
+long ui_weather_fetch() {
     uint32_t start_ts = timing_get_ms();
     if (weather_screen.dimensions().width == 0) {
-        return false;
+        return 0;
     }
     if (weather_location[0] == '\0') {
         if (!config_get_value("location", 0, weather_location, sizeof(weather_location))) {
-            return false;
+            return 0;
         }
         if (weather_location[0] == '\0') {
-            return false;
+            return 0;
         }
         http_url_encode(weather_location, sizeof(weather_location), weather_location, http_enc_rfc3986);
         strcpy(weather_api_url, weather_api_url_part);
@@ -370,6 +370,7 @@ bool ui_weather_fetch() {
         float wind_angle = 0;
         int humidity = 0, cloud = 0;
         time_t last_updated;
+        time_t local_time;
         char wind_dir[16];
         // char wind_gust[16];
         wind_dir[0] = '\0';
@@ -390,7 +391,10 @@ bool ui_weather_fetch() {
                             strcpy(weather_info.area, reader.value());
                         } else if (0 == strcmp("country", reader.value()) && reader.read()) {
                             strcpy(weather_info.country, reader.value());
+                        } else if (0 == strcmp("localtime_epoch", reader.value()) && reader.read()) {
+                            local_time = (time_t)reader.value_int();
                         }
+                        
                     }
                 } else if (state == J_CUR) {
                     if (reader.node_type() == json_node_type::field) {
@@ -437,6 +441,11 @@ bool ui_weather_fetch() {
             weather_area_label.text(weather_info.area);
             weather_condition_label.text(weather_info.condition);
             strcpy(weather_info.last_updated,"Updated: ");
+            long result = (last_updated+(15*60))-local_time;
+            if(result<=0) {
+                result = 15*60;
+            }
+            printf("Next update in %ld minutes\n",result/60);
             long offs=0;
             rtc_time_get_tz_offset(&offs);
             last_updated += offs;
@@ -529,11 +538,11 @@ bool ui_weather_fetch() {
             if (display_update_8bit()) {
                 printf("Display panel transfer complete in %ldms. Sleeping.\n",(long)(timing_get_ms()-transfer_ts));
                 display_sleep();
-                return true;
+                return result;
             }
         }
-        return false;
+        return 0;
     }
     http_end(handle);
-    return false;
+    return 0;
 }

@@ -153,26 +153,27 @@ extern "C" void run(void) {
     }
 }
 extern "C" void loop(void) {
+    long next_update = 15*60;
     button_update();
     if(net_status()==NET_CONNECTED) {
         if(net_start_ts!=0) {
             printf("Network connected in %0.2f seconds\n",(timing_get_ms()-net_start_ts)/1000.f);
             net_start_ts=0;
         }
-        if(fetch_ts==0 || timing_get_ms()>=fetch_ts+15*60*1000) {
+        if(fetch_ts==0 || timing_get_ms()>=fetch_ts+next_update*1000) {
             if(fetch_ts!=0) {
                 puts("Update starting");
                 start_ts = timing_get_ms();
             }
             fetch_ts=timing_get_ms();
-            
-            if(!ui_weather_fetch()) {
+            next_update = ui_weather_fetch();
+            if(!next_update) {
                 puts("Could not fetch weather");
             } else {
                 printf("Update completed in %0.2f seconds\n",(timing_get_ms()-start_ts)/1000.f);
             }
 #ifdef INKPLATE10V2
-            esp_sleep_enable_timer_wakeup(15*60*1000000);
+            esp_sleep_enable_timer_wakeup(next_update*1000000);
             power_sleep();
 #endif
 

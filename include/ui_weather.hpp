@@ -2,4 +2,4 @@
 #include "ui.hpp"
 
 bool ui_weather_init();
-bool ui_weather_fetch();
+long ui_weather_fetch();
