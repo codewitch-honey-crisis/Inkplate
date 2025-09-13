@@ -11,3 +11,10 @@ The weather station uses weatherapi.com to fetch weather data for your area (con
 You can reset the configuration by using the left button any time the device is asleep. It will also show up if it cannot connect to the network.
 
 Otherwise the device will wake in sync with weatherapi.com info updates to update the display.
+
+If the specified location is in the USA, the station defaults to imperial units. Otherwise it defaults to metric. Either way, it can be overridden on the configuration web.
+
+Location can be specified as geo-coordinates, or in the US/CA/UK can be a city or postal/zipcode
+
+The timezone should also be properly configured to show the update time as local time.
+
