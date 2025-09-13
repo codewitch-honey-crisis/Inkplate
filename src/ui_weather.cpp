@@ -15,6 +15,9 @@
 #include "json.hpp"
 #include "timing.h"
 #include "rtc_time.h"
+#if defined(INKPLATE10) || defined(INKPLATE10V2)
+#include "inkplate10/power.h"
+#endif
 using namespace gfx;
 using namespace uix;
 using namespace json;
@@ -140,6 +143,10 @@ static needle_t weather_compass_needle;
 static label_t weather_area_label;
 static label_t weather_condition_label;
 static label_t weather_updated_label;
+#if defined(INKPLATE10) || defined(INKPLATE10V2)
+static char battery_info[64];
+static label_t weather_battery_label;
+#endif
 static label_t weather_temp_title_label;
 static label_t weather_temp_label;
 static label_t weather_wind_title_label;
@@ -197,7 +204,16 @@ bool ui_weather_init() {
     weather_condition_label.font(text_font);
     weather_condition_label.color(ucolor_t::black);
     weather_screen.register_control(weather_condition_label);
+#if defined(INKPLATE10) || defined(INKPLATE10V2)
+    sr.offset_inplace(sr.width()+1,0);
+    weather_battery_label.bounds(sr);
+    weather_battery_label.text("");
+    weather_battery_label.font(text_font);
+    weather_battery_label.color(ucolor_t::black);
+    weather_screen.register_control(weather_battery_label);
+#endif
 
+    sr = weather_area_label.bounds();
     sr.offset_inplace(sr.width()+1,0);
     sr.x2-=weather_compass_needle.dimensions().width;
     weather_updated_label.bounds(sr);
@@ -355,6 +371,15 @@ long ui_weather_fetch() {
             strcpy(weather_units, "auto");
         }
     }
+#if defined(INKPLATE10) || defined(INKPLATE10V2)
+    battery_info[0]='\0';
+    const float batt_voltage = power_battery_voltage();
+    if(batt_voltage!=0) {
+        const float batt_level = power_battery_level();
+        snprintf(battery_info,sizeof(battery_info)-1,"Charge: %0.f%% (%0.2fv)",batt_level*100.f,batt_voltage);
+        weather_battery_label.text(battery_info);
+    }
+#endif
     http_handle_t handle = http_init(weather_api_url);
     int status = http_read_status_and_headers(handle);
     enum {

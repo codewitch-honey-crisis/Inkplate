@@ -4,6 +4,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+float power_battery_voltage(void);
+float power_battery_level(void);
 void power_sleep(void);
 #ifdef __cplusplus
 }
