@@ -4,7 +4,7 @@
             "ldscript": "esp32_out.ld"
         },
         "core": "esp32",
-        "extra_flags": "-DARDUINO_INKPLATE10 -DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue",
+        "extra_flags": "-DINKPLATE10V2 -DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue",
         "f_cpu": "240000000L",
         "f_flash": "80000000L",
 
