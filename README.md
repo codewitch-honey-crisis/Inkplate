@@ -8,6 +8,6 @@ Must have nodeJS, vite, and platformIO installed to build.
 
 The weather station uses weatherapi.com to fetch weather data for your area (configured via the portal)
 
-You can reset the configuration by using the left button any time the device is asleep.
+You can reset the configuration by using the left button any time the device is asleep. It will also show up if it cannot connect to the network.
 
 Otherwise the device will wake in sync with weatherapi.com info updates to update the display.
