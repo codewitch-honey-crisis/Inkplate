@@ -485,17 +485,13 @@ bool ui_weather_fetch() {
             }
             bool washing = !display_washed();
             if(washing) {
-                puts("Screen wash started");
-                display_clean_3bit_async();
-            } else {
-                puts("Screen wash completed");
+                display_wash_3bit_async();
             }
             puts("UI update started");
             weather_screen.update();
             puts("UI updated");
             if(washing) {
-                display_clean_3bit_wait();
-                puts("Screen wash completed");
+                display_wash_3bit_wait();
             }
             if(display_update_3bit()) {
                 display_sleep();

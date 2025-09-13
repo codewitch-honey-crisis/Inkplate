@@ -18,6 +18,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+typedef void(*display_on_wash_complete_callback_t)(void*state);
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -37,8 +38,9 @@ size_t display_buffer_3bit_size(void);
 /// @return A pointer to the buffer
 uint8_t* display_buffer_3bit(void);
 bool display_washed(void);
-bool display_clean_3bit_async(void);
-void display_clean_3bit_wait(void);
+void display_on_washed_complete_callback(display_on_wash_complete_callback_t callback, void* state);
+bool display_wash_3bit_async(void);
+void display_wash_3bit_wait(void);
 /// @brief Sends the current frame buffer to the display
 /// @return True if successful, otherwise false
 bool display_update_1bit(void);

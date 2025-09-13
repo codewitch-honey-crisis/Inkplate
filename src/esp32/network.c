@@ -81,13 +81,13 @@ bool net_init() {
     bool loaded = false;
     wifi_ssid[0]='\0';
     wifi_pass[0]='\0';
-    if (fs_external_init()) {
-        ESP_LOGI(TAG,"SD card found, looking for wifi.txt creds");
-        loaded = net_wifi_load("/sdcard/wifi.txt", wifi_ssid,64, wifi_pass, 128);
-        if(loaded) {
-            ESP_LOGI(TAG,"Found wifi.txt on SD card");
-        }
-    }
+    // if (fs_external_init()) {
+    //     ESP_LOGI(TAG,"SD card found, looking for wifi.txt creds");
+    //     loaded = net_wifi_load("/sdcard/wifi.txt", wifi_ssid,64, wifi_pass, 128);
+    //     if(loaded) {
+    //         ESP_LOGI(TAG,"Found wifi.txt on SD card");
+    //     }
+    // }
     if (!loaded) {
         ESP_LOGI(TAG,"Looking for wifi.txt creds on internal flash");
         loaded = net_wifi_load("/spiffs/wifi.txt", wifi_ssid, 64, wifi_pass, 128);

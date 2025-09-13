@@ -202,7 +202,8 @@ static uint16_t _partialUpdateCounter = 0;
 static bool panel_enabled = false;
 static uint8_t waveform3Bit[8][9];
 static struct waveformData waveformStored;
-
+static display_on_wash_complete_callback_t on_wash_complete_callback = NULL;
+static void* on_wash_complete_callback_state = NULL;
 // static const uint8_t LUT2[16] = {0xAA, 0xA9, 0xA6, 0xA5, 0x9A, 0x99, 0x96, 0x95,
 //                               0x6A, 0x69, 0x66, 0x65, 0x5A, 0x59, 0x56, 0x55};
 static const uint8_t LUTW[16] = {0xFF, 0xFE, 0xFB, 0xFA, 0xEF, 0xEE, 0xEB, 0xEA,
@@ -952,7 +953,9 @@ static void panel_clean_3bit_task(void* arg) {
     }
 
     washed = true;
-
+    if(on_wash_complete_callback!=NULL) {
+        on_wash_complete_callback(on_wash_complete_callback_state);
+    }
     task_mutex_unlock(clean_mutex);
     vTaskDelete(NULL);
 }
@@ -983,6 +986,10 @@ static bool panel_update_3bit(void)
             panel_clean(2, 1);
             panel_clean(1, 10);
         }
+        washed = true;
+        if(on_wash_complete_callback!=NULL) {
+        on_wash_complete_callback(on_wash_complete_callback_state);
+    }
     }
     washed = false;
     for (int k = 0; k < 9; k++)
@@ -1049,7 +1056,7 @@ size_t display_buffer_1bit_size() {
 uint8_t* display_buffer_1bit() {
     return _partial;
 }
-bool display_clean_3bit_async(void) {
+bool display_wash_3bit_async(void) {
     if(washed) {
         return true;
     }
@@ -1060,7 +1067,7 @@ bool display_clean_3bit_async(void) {
     }
     return false;
 }
-void display_clean_3bit_wait(void) {
+void display_wash_3bit_wait(void) {
     if(washed) {
         return;
     }
@@ -1078,6 +1085,11 @@ bool display_washed(void) {
     bool result = washed;
     task_mutex_unlock(clean_mutex);
     return result;
+}
+
+void display_on_washed_complete_callback(display_on_wash_complete_callback_t callback, void* state) {
+    on_wash_complete_callback = callback;
+    on_wash_complete_callback_state = state;
 }
 
 #endif  // INKPLATE10

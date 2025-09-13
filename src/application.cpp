@@ -41,6 +41,9 @@ static void portal_on_disconnect(void* state) {
     task_mutex_unlock(dhcp_mutex);
 }
 #endif
+static void on_wash_complete(void* state) {
+    puts("Screen wash complete");
+}
 static uint32_t fetch_ts = 0;
 static void on_button_changed(bool pressed, void* state) {
     if(!pressed) {
@@ -59,8 +62,9 @@ extern "C" void run(void) {
         puts("Display init failed");
         return;
     }
+    display_on_washed_complete_callback(on_wash_complete,NULL);
     puts("Screen wash started");
-    if(!display_clean_3bit_async()) {
+    if(!display_wash_3bit_async()) {
         puts("Warning: Screen wash failed. Continuing...");
     }
     if(!button_init()) {
