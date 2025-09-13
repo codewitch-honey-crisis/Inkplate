@@ -503,8 +503,9 @@ bool ui_weather_fetch() {
                 display_wash_8bit_wait();
             }
             puts("Begin display panel transfer");
+            uint32_t transfer_ts = timing_get_ms();
             if (display_update_8bit()) {
-                puts("End display panel transfer. Sleeping.");
+                printf("Display panel transfer complete in %ldms. Sleeping.\n",(long)(timing_get_ms()-transfer_ts));
                 display_sleep();
                 return true;
             }
