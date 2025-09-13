@@ -258,11 +258,13 @@ class icon_box : public uix::control<ControlSurfaceType> {
     void svg(gfx::stream& value) {
         m_svg = &value;
         m_dirty = true;
+        this->invalidate();
     }
     gfx::sizef svg_size() const { return m_svg_size; }
     void svg_size(const gfx::sizef& value) {
         m_svg_size = value;
         m_dirty = true;
+        this->invalidate();
     }
     
     bool pressed() const { return m_pressed; }

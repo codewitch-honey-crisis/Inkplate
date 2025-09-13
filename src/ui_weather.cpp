@@ -153,6 +153,7 @@ bool ui_weather_init() {
     weather_screen.buffer1(display_buffer_8bit());
     weather_screen.dimensions((ssize16)screen_dimensions);
     weather_screen.background_color(scolor_gsc_t::white);
+    
     const float fheight = screen_dimensions.width/8.f;
     const float ftheight = fheight/2.f;
     weather_icon.bounds(srect16(spoint16::zero(),ssize16(screen_dimensions.width/8,screen_dimensions.width/8)));
@@ -161,7 +162,7 @@ bool ui_weather_init() {
     weather_screen.register_control(weather_icon);
     srect16 sr = weather_icon.bounds();
     sr.offset_inplace(weather_screen.dimensions().width-weather_icon.dimensions().width,0);
-    const float deflate = -screen_dimensions.width/100;
+    const float deflate = -screen_dimensions.width/120;
     weather_compass.bounds(sr.inflate(deflate,deflate));
     weather_compass.svg_size(compass_dimensions);
     weather_compass.svg(compass);

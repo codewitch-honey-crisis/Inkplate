@@ -22,6 +22,9 @@
 #include "ui_weather.hpp"
 using namespace gfx;
 using namespace uix;
+static uint32_t start_ts;
+static uint32_t wash_start_ts;
+static uint32_t net_start_ts=0;
 #ifdef ESP_PLATFORM
 char ssid[65];
 char pass[129];
@@ -42,7 +45,7 @@ static void portal_on_disconnect(void* state) {
 }
 #endif
 static void on_wash_complete(void* state) {
-    puts("Screen wash complete");
+    printf("Screen wash complete in %0.2f seconds\n",(timing_get_ms()-wash_start_ts)/1000.f);
 }
 static uint32_t fetch_ts = 0;
 static void on_button_changed(bool pressed, void* state) {
@@ -51,7 +54,6 @@ static void on_button_changed(bool pressed, void* state) {
         fetch_ts=0;
     }
 }
-static uint32_t start_ts;
 extern "C" void run(void) {
     puts("Update starting");
     start_ts = timing_get_ms();
@@ -64,6 +66,7 @@ extern "C" void run(void) {
     }
     display_on_washed_complete_callback(on_wash_complete,NULL);
     puts("Screen wash started");
+    wash_start_ts = timing_get_ms();
     if(!display_wash_8bit_async()) {
         puts("Warning: Screen wash failed. Continuing...");
     }
@@ -77,6 +80,7 @@ extern "C" void run(void) {
     }
     button_on_press_changed_callback(on_button_changed,nullptr);
     if(net_init()) {
+        net_start_ts=timing_get_ms();
         while(net_status()==NET_WAITING) {
             timing_delay_ms(5);
         }
@@ -151,6 +155,10 @@ extern "C" void run(void) {
 extern "C" void loop(void) {
     button_update();
     if(net_status()==NET_CONNECTED) {
+        if(net_start_ts!=0) {
+            printf("Network connected in %0.2f seconds\n",(timing_get_ms()-net_start_ts)/1000.f);
+            net_start_ts=0;
+        }
         if(fetch_ts==0 || timing_get_ms()>=fetch_ts+10*60*1000) {
             if(fetch_ts!=0) {
                 puts("Update starting");
