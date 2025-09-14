@@ -467,7 +467,7 @@ long ui_weather_fetch() {
             weather_condition_label.text(weather_info.condition);
             strcpy(weather_info.last_updated,"Updated: ");
             long result = (last_updated+(15*60))-local_time;
-            if(result<=0) {
+            if(result<=60) {
                 result = 15*60;
             }
             long offs=0;
