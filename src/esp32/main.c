@@ -6,7 +6,9 @@
 extern void run(void);
 extern void loop(void);
 void app_main(void) {
-    //esp_log_level_set("*", ESP_LOG_NONE);
+#ifndef VERBOSE
+    esp_log_level_set("*", ESP_LOG_NONE);
+#endif
     run();
     uint32_t ts = 0;
     while (1) {

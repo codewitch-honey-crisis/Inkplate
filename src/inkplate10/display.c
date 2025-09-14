@@ -306,9 +306,15 @@ err:
 }
 
 static bool i2c_write_read(uint8_t address, const void *to_write, size_t write_len, void *to_read, size_t read_len) {
+#ifdef LEGACY_I2C
     if (i2c_write(address, to_write, write_len)) {
         return i2c_read(address, to_read, read_len);
     }
+#else
+    if(ESP_OK==i2c_master_transmit_receive(i2c_handle,to_write,write_len,to_read,read_len,1000)) {
+        return true;
+    }
+#endif
     return false;
 }
 

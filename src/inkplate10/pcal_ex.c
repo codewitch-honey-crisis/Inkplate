@@ -122,8 +122,8 @@ err:
     }
     return result;
 #else
-    i2c_master_dev_handle_t handle = (address==IO_INT_ADDR)?i2c_handle_int:i2c_handle_ext;
-    esp_err_t ret = i2c_master_transmit(handle,to_write,write_len,1000);
+    i2c_master_dev_handle_t i2c_handle = (address==IO_INT_ADDR)?i2c_handle_int:i2c_handle_ext;
+    esp_err_t ret = i2c_master_transmit(i2c_handle,to_write,write_len,1000);
     if(ESP_OK!=ret) {
         ESP_LOGE(TAG,"Error: %s",esp_err_to_name(ret));
         return false;
@@ -163,8 +163,8 @@ err:
     }
     return result;
 #else
-    i2c_master_dev_handle_t handle = (address==IO_INT_ADDR)?i2c_handle_int:i2c_handle_ext;
-    esp_err_t ret = i2c_master_receive(handle,to_read,read_len,1000);
+    i2c_master_dev_handle_t i2c_handle = (address==IO_INT_ADDR)?i2c_handle_int:i2c_handle_ext;
+    esp_err_t ret = i2c_master_receive(i2c_handle,to_read,read_len,1000);
     if(ESP_OK!=ret) {
         ESP_LOGE(TAG,"Error: %s",esp_err_to_name(ret));
         return false;
@@ -172,12 +172,21 @@ err:
     return true;
 #endif
 }
-static bool i2c_write_read(uint8_t address, const void* to_write, size_t write_len,void* to_read, size_t read_len) {
-    if(i2c_write(address,to_write,write_len)) {
-        return i2c_read(address,to_read,read_len);
+
+static bool i2c_write_read(uint8_t address, const void *to_write, size_t write_len, void *to_read, size_t read_len) {
+#ifdef LEGACY_I2C
+    if (i2c_write(address, to_write, write_len)) {
+        return i2c_read(address, to_read, read_len);
     }
+#else
+    i2c_master_dev_handle_t i2c_handle = (address==IO_INT_ADDR)?i2c_handle_int:i2c_handle_ext;
+    if(ESP_OK==i2c_master_transmit_receive(i2c_handle,to_write,write_len,to_read,read_len,1000)) {
+        return true;
+    }
+#endif
     return false;
 }
+
 static bool read_registers(uint8_t addr,uint8_t *k)
 {
     uint8_t tmp = 0;
