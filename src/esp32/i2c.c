@@ -13,7 +13,7 @@ bool i2c_init(void) {
     i2c_config_t cfg;
     memset(&cfg,0,sizeof(cfg));
     cfg.clk_flags = I2C_SCLK_SRC_FLAG_FOR_NOMAL;
-    cfg.master.clk_speed = 100*1000;
+    cfg.master.clk_speed = 200*1000;
     cfg.mode = I2C_MODE_MASTER;
     cfg.sda_io_num = I2C_SDA;
     cfg.sda_pullup_en = false;
