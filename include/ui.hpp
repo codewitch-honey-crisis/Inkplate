@@ -46,6 +46,7 @@ private:
     uix::uix_justify m_text_justify;
     gfx::matrix m_matrix;
     float m_font_size;
+    gfx::sizef m_background_round;
     void build_label_path_untransformed() {
         if(m_font_stream==nullptr) {
             return;
@@ -132,6 +133,7 @@ public:
         m_color = gfx::vector_pixel(255,255,255,255);
         m_background_color = gfx::rgba_pixel<32>(0,true);
         m_font_size = 0.f;
+        m_background_round = {0.f,0.f};
     }
     virtual ~vlabel() {
 
@@ -192,6 +194,14 @@ public:
         m_background_color = value;
         this->invalidate();
     }
+    gfx::sizef background_round() const {
+        return m_background_round;
+    }
+    void background_round(gfx::sizef value) {
+        m_background_round=value;
+        this->invalidate();
+    }
+    
 protected:
     virtual void on_before_paint() override {
         if(m_label_text_dirty) {
@@ -201,7 +211,9 @@ protected:
     }
     virtual void on_paint(control_surface_type& destination, const gfx::srect16& clip) {
         if(m_background_color.opacity()!=0) {
-            gfx::draw::filled_rectangle(destination,destination.bounds(),m_background_color);
+            if(m_background_round.width==0.f && m_background_round.height==0.f ) {
+                gfx::draw::filled_rectangle(destination,destination.bounds(),m_background_color);
+            }
         }
         base_type::on_paint(destination,clip);
     }
@@ -209,13 +221,24 @@ protected:
         if(m_font_stream==nullptr) {
             return;
         }
+        // save the current transform
+        gfx::matrix old = destination.transform();
+        destination.transform(gfx::matrix::create_identity());
         gfx::canvas_style si = destination.style();
         si.fill_paint_type = gfx::paint_type::solid;
         si.stroke_paint_type = gfx::paint_type::none;
+        if(m_background_color.opacity()!=0) {
+            if(m_background_round.width!=0.f || m_background_round.height!=0.f ) {
+                gfx::vector_pixel bg;
+                convert(m_background_color,&bg);
+                si.fill_color = bg;
+                destination.style(si);
+                destination.rounded_rectangle((gfx::rectf)destination.bounds(),m_background_round);
+                destination.render();
+            }
+        }
         si.fill_color = m_color;
         destination.style(si);
-        // save the current transform
-        gfx::matrix old = destination.transform();
         destination.transform(m_matrix);
         destination.path(m_label_text_path);
         destination.render();

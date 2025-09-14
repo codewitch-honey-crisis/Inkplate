@@ -221,9 +221,10 @@ bool ui_weather_init() {
     weather_updated_label.font(text_font);
     weather_updated_label.color(ucolor_t::black);
     weather_screen.register_control(weather_updated_label);
-
+    static const float bradius = screen_dimensions.width/50;
     sr = srect16(0, weather_icon.bounds().y2 + 2, weather_screen.bounds().x2 / 2 - 1, weather_icon.bounds().y2 + 2 + (fheight / 2));
     weather_temp_title_label.bounds(sr);
+    weather_temp_title_label.background_round({bradius,bradius});
     weather_temp_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
     weather_temp_title_label.font(text_font);
     weather_temp_title_label.color(ucolor_t::white);
@@ -234,6 +235,7 @@ bool ui_weather_init() {
 
     sr.offset_inplace(sr.width() + 2, 0);
     weather_wind_title_label.bounds(sr);
+    weather_wind_title_label.background_round({bradius,bradius});
     weather_wind_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
     weather_wind_title_label.font(text_font);
     weather_wind_title_label.color(ucolor_t::white);
@@ -242,7 +244,7 @@ bool ui_weather_init() {
     weather_wind_title_label.text_justify(uix_justify::center);
     weather_screen.register_control(weather_wind_title_label);
 
-    sr = weather_temp_title_label.bounds().offset(0, weather_temp_title_label.dimensions().height + 1);
+    sr = weather_temp_title_label.bounds().offset(0, weather_temp_title_label.dimensions().height + 1+screen_dimensions.height/20);
     sr.y2 += (fheight / 2);
     weather_temp_label.bounds(sr);
     weather_temp_label.text("Fetching...");
@@ -250,7 +252,7 @@ bool ui_weather_init() {
     weather_temp_label.color(ucolor_t::black);
     weather_screen.register_control(weather_temp_label);
 
-    sr = weather_wind_title_label.bounds().offset(0, weather_wind_title_label.dimensions().height + 1);
+    sr = weather_wind_title_label.bounds().offset(0, weather_wind_title_label.dimensions().height + 1+screen_dimensions.height/20);
     sr.y2 += (fheight / 2);
     weather_wind_label.bounds(sr);
     weather_wind_label.text("Fetching...");
@@ -261,6 +263,7 @@ bool ui_weather_init() {
     sr = weather_temp_title_label.bounds();
     sr.offset_inplace(0, (sr.height() * 2) + (fheight / 2));
     weather_precipitation_title_label.bounds(sr);
+    weather_precipitation_title_label.background_round({bradius,bradius});
     weather_precipitation_title_label.text("PRECIPITATION");
     weather_precipitation_title_label.font(text_font);
     weather_precipitation_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
@@ -271,6 +274,7 @@ bool ui_weather_init() {
 
     sr.offset_inplace(sr.width() + 2, 0);
     weather_humidity_title_label.bounds(sr);
+    weather_humidity_title_label.background_round({bradius,bradius});
     weather_humidity_title_label.text("HUMIDITY");
     weather_humidity_title_label.font(text_font);
     weather_humidity_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
@@ -281,14 +285,14 @@ bool ui_weather_init() {
 
     sr = weather_precipitation_title_label.bounds();
     sr.y2 += (fheight / 2);
-    sr.offset_inplace(0, weather_precipitation_title_label.dimensions().height + 1);
+    sr.offset_inplace(0, weather_precipitation_title_label.dimensions().height + 1+screen_dimensions.height/20);
     weather_precipitation_label.bounds(sr);
     weather_precipitation_label.text("Fetching...");
     weather_precipitation_label.font(text_font);
     weather_precipitation_label.color(ucolor_t::black);
     weather_screen.register_control(weather_precipitation_label);
 
-    sr = weather_humidity_title_label.bounds().offset(0, weather_humidity_title_label.dimensions().height + 1);
+    sr = weather_humidity_title_label.bounds().offset(0, weather_humidity_title_label.dimensions().height + 1+screen_dimensions.height/20);
     sr.y2 += (fheight / 2);
     weather_humidity_label.bounds(sr);
     weather_humidity_label.text("Fetching...");
@@ -299,6 +303,7 @@ bool ui_weather_init() {
     sr = weather_precipitation_title_label.bounds();
     sr.offset_inplace(0, (sr.height() * 2) + (fheight / 2));
     weather_visibility_title_label.bounds(sr);
+    weather_visibility_title_label.background_round({bradius,bradius});
     weather_visibility_title_label.text("VISIBILITY");
     weather_visibility_title_label.font(text_font);
     weather_visibility_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
@@ -309,6 +314,7 @@ bool ui_weather_init() {
 
     sr.offset_inplace(sr.width() + 2, 0);
     weather_pressure_title_label.bounds(sr);
+    weather_pressure_title_label.background_round({bradius,bradius});
     weather_pressure_title_label.text("PRESSURE");
     weather_pressure_title_label.font(text_font);
     weather_pressure_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
@@ -319,14 +325,14 @@ bool ui_weather_init() {
 
     sr = weather_visibility_title_label.bounds();
     sr.y2 += (fheight / 2);
-    sr.offset_inplace(0, weather_visibility_title_label.dimensions().height + 1);
+    sr.offset_inplace(0, weather_visibility_title_label.dimensions().height + 1+screen_dimensions.height/20);
     weather_visibility_label.bounds(sr);
     weather_visibility_label.text("Fetching...");
     weather_visibility_label.font(text_font);
     weather_visibility_label.color(ucolor_t::black);
     weather_screen.register_control(weather_visibility_label);
 
-    sr = weather_pressure_title_label.bounds().offset(0, weather_pressure_title_label.dimensions().height + 1);
+    sr = weather_pressure_title_label.bounds().offset(0, weather_pressure_title_label.dimensions().height + 1+screen_dimensions.height/20);
     sr.y2 += (fheight / 2);
     weather_pressure_label.bounds(sr);
     weather_pressure_label.text("Fetching...");
