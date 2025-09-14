@@ -891,7 +891,6 @@ int32_t panel_partial_update_1bit(bool _forced) {
     return changeCount;
 }
 static void panel_clean_8bit_task(void *arg) {
-    task_mutex_lock(clean_mutex, -1);
     if (waveformStored.waveformId != INKPLATE10_WAVEFORM1) {
         panel_clean(1, 1);
         panel_clean(0, 7);
@@ -911,42 +910,21 @@ static void panel_clean_8bit_task(void *arg) {
         panel_clean(2, 1);
         panel_clean(1, 10);
     }
-
+    task_mutex_lock(clean_mutex, -1);
     washed = true;
+    task_mutex_unlock(clean_mutex);
     if (on_wash_complete_callback != NULL) {
         on_wash_complete_callback(on_wash_complete_callback_state);
     }
-    task_mutex_unlock(clean_mutex);
     vTaskDelete(NULL);
 }
 #define RSHIFT (5)
 static bool panel_update_8bit(void) {
     if (!panel_on())
         return false;
-    if (!washed) {
-        if (waveformStored.waveformId != INKPLATE10_WAVEFORM1) {
-            panel_clean(1, 1);
-            panel_clean(0, 7);
-            panel_clean(2, 1);
-            panel_clean(1, 12);
-            panel_clean(2, 1);
-            panel_clean(0, 7);
-            panel_clean(2, 1);
-            panel_clean(1, 12);
-        } else {
-            panel_clean(1, 1);
-            panel_clean(0, 10);
-            panel_clean(2, 1);
-            panel_clean(1, 10);
-            panel_clean(2, 1);
-            panel_clean(0, 10);
-            panel_clean(2, 1);
-            panel_clean(1, 10);
-        }
-        washed = true;
-        if (on_wash_complete_callback != NULL) {
-            on_wash_complete_callback(on_wash_complete_callback_state);
-        }
+    bool w = display_washed();
+    if (!w) {
+        panel_clean_8bit_task(NULL);
     }
     washed = false;
     for (int k = 0; k < 9; k++) {
@@ -1027,24 +1005,20 @@ uint8_t *display_buffer_1bit() {
     return _partial;
 }
 bool display_wash_8bit_async(void) {
-    if (washed) {
+    if (display_washed()) {
         return true;
     }
     TaskHandle_t th;
-    xTaskCreatePinnedToCore(panel_clean_8bit_task, "clean_task", 2048, NULL, 2, &th, 1 - xTaskGetCoreID(xTaskGetCurrentTaskHandle()));
+    xTaskCreate(panel_clean_8bit_task, "clean_task", 2048, NULL, 2, &th);
     if (NULL != th) {
         return true;
     }
     return false;
 }
 void display_wash_8bit_wait(void) {
-    if (washed) {
-        return;
-    }
     while (true) {
-        task_mutex_lock(clean_mutex, -1);
-        if (washed) {
-            task_mutex_unlock(clean_mutex);
+        bool w = display_washed();
+        if (w) {
             return;
         }
         task_delay(5);

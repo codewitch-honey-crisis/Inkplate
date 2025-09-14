@@ -558,17 +558,13 @@ long ui_weather_fetch() {
                     }
                 }
             }
-            bool washing = !display_washed();
-            if (washing) {
-                display_wash_8bit_async();
-            }
+           
             uint32_t ui_start_ts = timing_get_ms();
             puts("UI update started");
             weather_screen.update();
             printf("UI updated in %ldms\n", (long)(timing_get_ms() - ui_start_ts));
-            if (washing) {
-                display_wash_8bit_wait();
-            }
+            puts("Waiting for wash to finish...");
+            display_wash_8bit_wait();
             puts("Begin display panel transfer");
             uint32_t transfer_ts = timing_get_ms();
             if (display_update_8bit()) {
