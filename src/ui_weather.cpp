@@ -503,9 +503,9 @@ long ui_weather_fetch() {
             weather_temp_label.text(weather_info.temp);
             
             if (is_imperial) {
-                snprintf(weather_info.wind, sizeof(weather_info.wind), "%s %0.1fMPH (gust %0.1fMPH)", wind_dir, to_miles(wind_kph), to_miles(gust_kph));
+                snprintf(weather_info.wind, sizeof(weather_info.wind), "%s %0.1fmph (gust %0.1fmph)", wind_dir, to_miles(wind_kph), to_miles(gust_kph));
             } else {
-                snprintf(weather_info.wind, sizeof(weather_info.wind), "%s %0.1fKPH (gust %0.1fKPH)", wind_dir, wind_kph, gust_kph);
+                snprintf(weather_info.wind, sizeof(weather_info.wind), "%s %0.1fkph (gust %0.1fkph)", wind_dir, wind_kph, gust_kph);
             }
             weather_wind_label.text(weather_info.wind);
             if (precip_mm > 0.f) {
