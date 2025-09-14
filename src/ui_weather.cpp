@@ -468,7 +468,7 @@ long ui_weather_fetch() {
             strcpy(weather_info.last_updated,"Updated: ");
             long result = (last_updated+(15*60))-local_time;
             if(result<=60) {
-                result = 15*60;
+                result = 5*60;
             }
             long offs=0;
             rtc_time_get_tz_offset(&offs);
