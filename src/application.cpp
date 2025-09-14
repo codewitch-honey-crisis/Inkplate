@@ -181,6 +181,7 @@ extern "C" void loop(void) {
             }
 #ifdef INKPLATE10V2
             printf("Update finished. Free RAM: %0.2fKB\n", esp_get_free_heap_size()/1024.f);
+            puts("Sleeping");
             esp_sleep_enable_ext0_wakeup((gpio_num_t)BUTTON_A, 0);
             esp_sleep_enable_timer_wakeup(next_update*1000000);
             power_sleep();

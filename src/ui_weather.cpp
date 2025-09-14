@@ -567,7 +567,7 @@ long ui_weather_fetch() {
             puts("Begin display panel transfer");
             uint32_t transfer_ts = timing_get_ms();
             if (display_update_8bit()) {
-                printf("Display panel transfer complete in %ldms. Sleeping.\n",(long)(timing_get_ms()-transfer_ts));
+                printf("Display panel transfer complete in %ldms. Turning off display.\n",(long)(timing_get_ms()-transfer_ts));
                 display_sleep();
                 return result;
             }
