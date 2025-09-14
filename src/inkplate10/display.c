@@ -24,22 +24,28 @@ IN THE SOFTWARE.
 #include <stddef.h>
 #include <stdint.h>
 
-#include "../esp32/i2c.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "driver/gpio.h"
+#ifdef LEGACY_I2C
 #include "driver/i2c.h"
+#else
+#include "driver/i2c_master.h"
+#endif
 #include "esp_check.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "hal/gpio_hal.h"
 #include "hal/gpio_ll.h"
-#include "hardware.h"
 #include "nvs_flash.h"
-#include "pcal_ex.h"
 #include "rom/gpio.h"
 #include "soc/gpio_periph.h"
 #include "soc/gpio_reg.h"
 #include "soc/gpio_sig_map.h"
 #include "soc/gpio_struct.h"
+#include "hardware.h"
+#include "../esp32/i2c.h"
+#include "pcal_ex.h"
 #include "task.h"
 #include "timing.h"
 #define INKPLATE10_WAVEFORM1 20
@@ -214,17 +220,21 @@ static const uint8_t LUTB[16] = {0xFF, 0xFD, 0xF7, 0xF5, 0xDF, 0xDD, 0xD7, 0xD5,
 // static const uint8_t pixelMaskLUT[8] = {0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80};
 // static const uint8_t pixelMaskGLUT[2] = {0xF, 0xF0};
 
+#ifdef LEGACY_I2C
 #define CMD_HANDLER_BUFFER_SIZE I2C_LINK_RECOMMENDED_SIZE(7)
-
 static uint8_t cmdlink_buffer[CMD_HANDLER_BUFFER_SIZE];
-
-static bool i2c_write(uint8_t address, const void *to_write, size_t write_len) {
+#else
+static i2c_master_bus_handle_t i2c_bus_handle = NULL;
+static i2c_master_dev_handle_t i2c_handle = NULL;
+#endif
+static bool i2c_write(uint8_t address, const void* to_write, size_t write_len) {
+#ifdef LEGACY_I2C
     i2c_cmd_handle_t cmd_link = NULL;
-    esp_err_t ret = ESP_OK;
+    esp_err_t ret=ESP_OK;
     ret = ret;
-    bool result = false;
+    bool result =false;
     cmd_link = i2c_cmd_link_create_static(cmdlink_buffer, CMD_HANDLER_BUFFER_SIZE);
-
+    
     ESP_GOTO_ON_ERROR(i2c_master_start(cmd_link), err, TAG, "i2c_master_start");
     ESP_GOTO_ON_ERROR(i2c_master_write_byte(cmd_link, (address << 1) | I2C_MASTER_WRITE, I2C_MASTER_ACK), err, TAG, "i2c_master_write_byte");
     if (write_len > 0) {
@@ -232,19 +242,29 @@ static bool i2c_write(uint8_t address, const void *to_write, size_t write_len) {
     }
     ESP_GOTO_ON_ERROR(i2c_master_stop(cmd_link), err, TAG, "i2c_master_stop");
     ESP_GOTO_ON_ERROR(i2c_master_cmd_begin(I2C_PORT, cmd_link, pdMS_TO_TICKS(10000)), err, TAG, "i2c_master_cmd_begin");
-
+    
     result = true;
 err:
-    if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "Error: %s", esp_err_to_name(ret));
+    if(ret!=ESP_OK) {
+        ESP_LOGE(TAG,"Error: %s",esp_err_to_name(ret));
     }
     if (cmd_link != NULL) {
         // i2c_cmd_link_delete(cmd_link);
         i2c_cmd_link_delete_static(cmd_link);
     }
     return result;
+#else
+    i2c_master_dev_handle_t handle = i2c_handle;
+    esp_err_t ret = i2c_master_transmit(handle,to_write,write_len,1000);
+    if(ESP_OK!=ret) {
+        ESP_LOGE(TAG,"Error: %s",esp_err_to_name(ret));
+        return false;
+    }
+    return true;
+#endif
 }
-static bool i2c_read(uint8_t address, void *to_read, size_t read_len) {
+static bool i2c_read(uint8_t address, void* to_read, size_t read_len) {
+#ifdef LEGACY_I2C
     i2c_cmd_handle_t cmd_link = NULL;
     esp_err_t ret = ESP_OK;
     ret = ret;
@@ -254,7 +274,7 @@ static bool i2c_read(uint8_t address, void *to_read, size_t read_len) {
 
     // i2c_cmd_handle_t cmd_link = i2c_cmd_link_create();
     ESP_GOTO_ON_ERROR(i2c_master_start(cmd_link), err, TAG, "i2c_master_start");
-    ESP_GOTO_ON_ERROR(i2c_master_write_byte(cmd_link, (address << 1) | I2C_MASTER_READ, 0), err, TAG, "i2c_master_write_byte");
+    ESP_GOTO_ON_ERROR(i2c_master_write_byte(cmd_link, (address << 1) | I2C_MASTER_READ,0), err, TAG, "i2c_master_write_byte");
 
     if (read_len > 1) {
         ESP_GOTO_ON_ERROR(i2c_master_read(cmd_link, to_read, read_len - 1, I2C_MASTER_NACK), err, TAG, "i2c_master_read");
@@ -266,15 +286,25 @@ static bool i2c_read(uint8_t address, void *to_read, size_t read_len) {
     ESP_GOTO_ON_ERROR(i2c_master_cmd_begin(I2C_PORT, cmd_link, pdMS_TO_TICKS(10000)), err, TAG, "i2c_master_cmd_begin");
     result = true;
 err:
-    if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "Error: %s", esp_err_to_name(ret));
-    }
+    if(ret!=ESP_OK) {
+        ESP_LOGE(TAG,"Error: %s",esp_err_to_name(ret));
+    }    
     if (cmd_link != NULL) {
         // i2c_cmd_link_delete(cmd_link);
         i2c_cmd_link_delete_static(cmd_link);
     }
     return result;
+#else
+    i2c_master_dev_handle_t handle = i2c_handle;
+    esp_err_t ret = i2c_master_receive(handle,to_read,read_len,1000);
+    if(ESP_OK!=ret) {
+        ESP_LOGE(TAG,"Error: %s",esp_err_to_name(ret));
+        return false;
+    }
+    return true;
+#endif
 }
+
 static bool i2c_write_read(uint8_t address, const void *to_write, size_t write_len, void *to_read, size_t read_len) {
     if (i2c_write(address, to_write, write_len)) {
         return i2c_read(address, to_read, read_len);
@@ -535,11 +565,34 @@ bool display_init(void) {
     if (display_initialized) {
         return true;
     }
+    if(!i2c_init()) {
+        ESP_LOGE(TAG,"Could not init I2C");
+        return false;
+    }
+#ifndef LEGACY_I2C
+    if(ESP_OK!=i2c_master_get_bus_handle((i2c_port_num_t)I2C_PORT,&i2c_bus_handle)) {
+        ESP_LOGE(TAG,"Could not get master I2C handle");
+        return false;
+    }
+    i2c_device_config_t dev_cfg;
+    memset(&dev_cfg,0,sizeof(dev_cfg));
+    dev_cfg.dev_addr_length = I2C_ADDR_BIT_LEN_7;
+    dev_cfg.flags.disable_ack_check = false;
+    dev_cfg.scl_speed_hz = 100*1000;
+    dev_cfg.scl_wait_us = 0;
+    dev_cfg.device_address = 0x48;
+    if(ESP_OK!=i2c_master_bus_add_device(i2c_bus_handle,&dev_cfg,&i2c_handle)) {
+        ESP_LOGE(TAG,"Could not add device");
+        i2c_bus_handle = NULL;
+        return false;
+    }
+#endif
     clean_mutex = task_mutex_init();
     if (clean_mutex == NULL) {
         return false;
     }
     if (!pcal_ex_init()) {
+        ESP_LOGE(TAG,"Could not initialize I/O expander");
         return false;
     }
     esp_err_t ret = nvs_flash_init();

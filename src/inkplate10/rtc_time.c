@@ -1,17 +1,26 @@
 #if defined(INKPLATE10) || defined(INKPLATE10V2)
+#include <memory.h>
 #include "rtc_time.h"
 #include "config.h"
 #include "hardware.h"
 #include "esp32/i2c.h"
 #include "esp_check.h"
 #include "esp_log.h"
+#ifdef LEGACY_I2C
 #include "driver/i2c.h"
+#else
+#include "driver/i2c_master.h"
+#endif
 static const char* TAG = "rtc_time";
+#ifdef LEGACY_I2C
 #define CMD_HANDLER_BUFFER_SIZE I2C_LINK_RECOMMENDED_SIZE(7)
-
 static uint8_t cmdlink_buffer[CMD_HANDLER_BUFFER_SIZE];
-
+#else
+static i2c_master_bus_handle_t i2c_bus_handle = NULL;
+static i2c_master_dev_handle_t i2c_handle = NULL;
+#endif
 static bool i2c_write(uint8_t address, const void* to_write, size_t write_len) {
+#ifdef LEGACY_I2C
     i2c_cmd_handle_t cmd_link = NULL;
     esp_err_t ret=ESP_OK;
     ret = ret;
@@ -36,8 +45,21 @@ err:
         i2c_cmd_link_delete_static(cmd_link);
     }
     return result;
+#else
+    if(write_len==0) {
+        return true;
+    }
+    i2c_master_dev_handle_t handle = i2c_handle;
+    esp_err_t ret = i2c_master_transmit(handle,to_write,write_len,1000);
+    if(ESP_OK!=ret) {
+        ESP_LOGE(TAG,"Error: %s",esp_err_to_name(ret));
+        return false;
+    }
+    return true;
+#endif
 }
 static bool i2c_read(uint8_t address, void* to_read, size_t read_len) {
+#ifdef LEGACY_I2C
     i2c_cmd_handle_t cmd_link = NULL;
     esp_err_t ret = ESP_OK;
     ret = ret;
@@ -67,6 +89,15 @@ err:
         i2c_cmd_link_delete_static(cmd_link);
     }
     return result;
+#else
+    i2c_master_dev_handle_t handle = i2c_handle;
+    esp_err_t ret = i2c_master_receive(handle,to_read,read_len,1000);
+    if(ESP_OK!=ret) {
+        ESP_LOGE(TAG,"Error: %s",esp_err_to_name(ret));
+        return false;
+    }
+    return true;
+#endif
 }
 static bool i2c_write_read(uint8_t address, const void* to_write, size_t write_len,void* to_read, size_t read_len) {
     if(i2c_write(address,to_write,write_len)) {
@@ -87,8 +118,29 @@ bool rtc_time_init(void) {
     if(!i2c_init()) {
         return false;
     }
+#ifndef LEGACY_I2C
+    if(ESP_OK!=i2c_master_get_bus_handle((i2c_port_num_t)I2C_PORT,&i2c_bus_handle)) {
+        return false;
+    }
+    i2c_device_config_t dev_cfg;
+    memset(&dev_cfg,0,sizeof(dev_cfg));
+    dev_cfg.dev_addr_length = I2C_ADDR_BIT_LEN_7;
+    dev_cfg.flags.disable_ack_check = false;
+    dev_cfg.scl_speed_hz = 100*1000;
+    dev_cfg.scl_wait_us = 0;
+    dev_cfg.device_address = 0x51;
+    if(ESP_OK!=i2c_master_bus_add_device(i2c_bus_handle,&dev_cfg,&i2c_handle)) {
+        i2c_bus_handle = NULL;
+        return false;
+    }
+#endif
     if(!i2c_write(0x51,NULL,0)) {
         ESP_LOGE(TAG,"Unable to find RTC device");
+#ifndef LEGACY_I2C
+        i2c_master_bus_rm_device(i2c_handle);
+        i2c_handle=NULL;
+        i2c_bus_handle = NULL;
+#endif
         return false;
     }
     return true;
