@@ -37,9 +37,17 @@ size_t display_buffer_8bit_size(void);
 /// @brief Gets the display buffer for the 8bit grayscale
 /// @return A pointer to the buffer
 uint8_t* display_buffer_8bit(void);
-bool display_washed(void);
+/// @brief Indicates whether the display has been washed for 8 bit opps
+/// @return True if already washed, otherwise false
+bool display_washed_8bit(void);
+/// @brief Sets the optional callback that will be invoked on wash completion
+/// @param callback The callback to invoke. May be made from another thread/task
+/// @param state A user defined state to pass with the callback
 void display_on_washed_complete_callback(display_on_wash_complete_callback_t callback, void* state);
+/// @brief Begins a wash of the screen for 8 bit opps
+/// @return True if successful, otherwise false
 bool display_wash_8bit_async(void);
+/// @brief Waits for any pending 8 bit wash to complete
 void display_wash_8bit_wait(void);
 /// @brief Sends the current frame buffer to the display
 /// @return True if successful, otherwise false

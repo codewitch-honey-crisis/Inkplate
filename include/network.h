@@ -8,7 +8,7 @@ extern "C" {
 #endif
 /// @brief Begins initializing the network
 /// @return true on success, false on error
-bool net_init(void);
+bool net_init_async(void);
 /// @brief Ends the network stack
 void net_end(void);
 /// @brief Reports the status of the network

@@ -85,7 +85,7 @@ extern "C" void run(void) {
         puts("RTC init failed");
         return;
     }
-    if(!start_portal && net_init()) {
+    if(!start_portal && net_init_async()) {
         net_start_ts=timing_get_ms();
         while(net_status()==NET_WAITING) {
             timing_delay_ms(5);
@@ -174,6 +174,19 @@ extern "C" void loop(void) {
             }
             fetch_ts=timing_get_ms();
             next_update = ui_weather_fetch();
+#ifdef INKPLATE10V2            
+            // we'll be sleeping, so we may as well end this a little early to save some power.
+            puts("Shutting down network");
+            net_end();
+#endif
+            puts("Waiting for wash to finish...");
+            display_wash_8bit_wait();            
+            uint32_t transfer_ts = timing_get_ms();
+            puts("Begin display panel transfer");
+            if (display_update_8bit()) {
+                printf("Display panel transfer complete in %ldms. Turning off display.\n",(long)(timing_get_ms()-transfer_ts));
+                display_sleep();
+            }
             if(!next_update) {
                 puts("Could not fetch weather");
             } else {

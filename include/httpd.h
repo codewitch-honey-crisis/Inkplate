@@ -15,7 +15,6 @@ void httpd_send_block(const char *data, size_t len, void *arg);
 /// @param data The data to send
 /// @param arg The context argument (contains info like platform specific socket info)
 void httpd_send_expr(const char* data, void *arg);
-
 /// @brief Splits a query string into name/value pairs
 /// @param url_part The next chuck of the url to parse
 /// @param out_name The buffer to hold the name
@@ -53,6 +52,11 @@ int httpd_broadcast_ws_frame(const char* path_and_query, const ws_srv_frame_t* f
 /// @param context The context argument (contains info like platform specific socket info)
 /// @return 0 on success, non-zero on error
 int httpd_send_ws_frame(const ws_srv_frame_t* frame, void* context);
+/// @brief Decodes an URL parameter
+/// @param dst The buffer to hold the result
+/// @param dstlen The length of the buffer
+/// @param src The source string
+/// @return The decoded string
 char* httpd_url_decode(char* dst, size_t dstlen, const char* src);
 #ifdef __cplusplus
 }

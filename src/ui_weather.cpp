@@ -363,14 +363,14 @@ static float to_psi(float mb) {
 long ui_weather_fetch() {
     uint32_t start_ts = timing_get_ms();
     if (weather_screen.dimensions().width == 0) {
-        return 0;
+        return -1;
     }
     if (weather_location[0] == '\0') {
         if (!config_get_value("location", 0, weather_location, sizeof(weather_location))) {
-            return 0;
+            return -1;
         }
         if (weather_location[0] == '\0') {
-            return 0;
+            return -1;
         }
         http_url_encode(weather_location, sizeof(weather_location), weather_location, http_enc_rfc3986);
         strcpy(weather_api_url, weather_api_url_part);
@@ -572,18 +572,10 @@ long ui_weather_fetch() {
             puts("UI update started");
             weather_screen.update();
             printf("UI updated in %ldms\n", (long)(timing_get_ms() - ui_start_ts));
-            puts("Waiting for wash to finish...");
-            display_wash_8bit_wait();
-            puts("Begin display panel transfer");
-            uint32_t transfer_ts = timing_get_ms();
-            if (display_update_8bit()) {
-                printf("Display panel transfer complete in %ldms. Turning off display.\n",(long)(timing_get_ms()-transfer_ts));
-                display_sleep();
-                return result;
-            }
+            return result;
         }
-        return 0;
+        return -1;
     }
     http_end(handle);
-    return 0;
+    return -1;
 }

@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "http.h"
+/// @brief Implements an io::stream over a HTTP connection
 class http_stream : public io::stream {
     uint8_t m_buffer[1024];
     size_t m_buffer_start;
@@ -11,6 +12,8 @@ class http_stream : public io::stream {
     unsigned long long m_position;
     bool ensure_buffer();
 public:
+    /// @brief Constructs an instance
+    /// @param handle The handle 
     http_stream(http_handle_t handle);
     virtual io::stream_caps caps() const override;
     virtual int getch() override;

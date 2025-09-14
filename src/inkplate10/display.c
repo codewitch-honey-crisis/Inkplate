@@ -922,7 +922,7 @@ static void panel_clean_8bit_task(void *arg) {
 static bool panel_update_8bit(void) {
     if (!panel_on())
         return false;
-    bool w = display_washed();
+    bool w = display_washed_8bit();
     if (!w) {
         panel_clean_8bit_task(NULL);
     }
@@ -1005,7 +1005,7 @@ uint8_t *display_buffer_1bit() {
     return _partial;
 }
 bool display_wash_8bit_async(void) {
-    if (display_washed()) {
+    if (display_washed_8bit()) {
         return true;
     }
     TaskHandle_t th;
@@ -1017,14 +1017,14 @@ bool display_wash_8bit_async(void) {
 }
 void display_wash_8bit_wait(void) {
     while (true) {
-        bool w = display_washed();
+        bool w = display_washed_8bit();
         if (w) {
             return;
         }
         task_delay(5);
     }
 }
-bool display_washed(void) {
+bool display_washed_8bit(void) {
     task_mutex_lock(clean_mutex, -1);
     bool result = washed;
     task_mutex_unlock(clean_mutex);

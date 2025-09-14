@@ -71,7 +71,7 @@ bool net_wifi_load(const char* path, char* ssid, size_t out_ssid_length, char* p
     return false;
 }
 
-bool net_init() {
+bool net_init_async() {
     if(wifi_event_group!=NULL) {
         return true;
     }
