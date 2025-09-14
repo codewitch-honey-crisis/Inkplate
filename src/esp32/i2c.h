@@ -4,6 +4,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/// @brief Initializes the I2C driver
+/// @return True on success, otherwise false
 bool i2c_init(void);
 #ifdef __cplusplus
 }

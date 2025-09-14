@@ -135,7 +135,7 @@ extern "C" void run(void) {
             if(conn!=dhcp_connected_old) {
                 dhcp_connected_old  = conn;
                 if(conn) {
-                    if(!ui_captive_portal_set_url(address)) {
+                    if(!ui_captive_portal_set_configure(address)) {
                         puts("ui update failed");
                         return;
                     }

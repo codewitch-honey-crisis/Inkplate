@@ -6,12 +6,6 @@ extern gfx::const_buffer_stream& text_font;
 constexpr static const gfx::size16 screen_dimensions = {1200, 825};
 #endif
 // for the grayscale mode
-// using gsc_pixel_t = gfx::pixel<
-//     // unused bit
-//     gfx::channel_traits<gfx::channel_name::nop,1>, 
-//     // 3 bits (L)uminosity channel
-//     gfx::channel_traits<gfx::channel_name::L,3>
-// >;
 using gsc_pixel_t = gfx::gsc_pixel<8>;
 // for the mono mode
 using mono_pixel_t = gfx::gsc_pixel<1>;
@@ -29,6 +23,8 @@ using surface_gsc_t = screen_gsc_t::control_surface_type;
 using screen_mono_t = uix::screen<mono_pixel_t>;
 using surface_mono_t = screen_mono_t::control_surface_type;
 
+/// @brief A vector label for displaying text
+/// @tparam ControlSurfaceType The UIX surface type to bind to
 template<typename ControlSurfaceType>
 class vlabel : public uix::canvas_control<ControlSurfaceType> {
     using base_type = uix::canvas_control<ControlSurfaceType>;
@@ -246,6 +242,8 @@ protected:
         destination.transform(old);
     }
 };
+/// @brief An SVG icon
+/// @tparam ControlSurfaceType The UIX surface type to bind to
 template <typename ControlSurfaceType>
 class icon_box : public uix::control<ControlSurfaceType> {
     using base_type = uix::control<ControlSurfaceType>;

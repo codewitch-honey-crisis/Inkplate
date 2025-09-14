@@ -223,7 +223,7 @@ static bool set_level_internal(uint8_t _addr, uint8_t *_r, uint8_t _pin, uint8_t
 }
 static int get_level_internal(uint8_t _addr, uint8_t *_r, uint8_t _pin)
 {
-    if(!initialized) return false;
+    if(!initialized) return -1;
     if (_pin > 15)
         return -1;
 

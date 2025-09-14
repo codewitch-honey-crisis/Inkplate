@@ -7,6 +7,7 @@ extern "C" {
 /// @brief Initializes the SPI bus
 /// @return true on success, false on error
 bool spi_init(void);
+/// @brief Deinitializes the SPI bus
 void spi_end(void);
 #ifdef __cplusplus
 }

@@ -112,7 +112,7 @@ bool ui_captive_portal_set_ap(const char* address, const char* ssid, const char*
     bool res= display_update_1bit();
     return res;
 }
-bool ui_captive_portal_set_url(const char* address) {
+bool ui_captive_portal_set_configure(const char* address) {
     if(xfer_buffer==NULL) return false;
     setup_label.text("Configure device");
     setup_qr.text(address);
