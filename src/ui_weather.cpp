@@ -489,15 +489,15 @@ long ui_weather_fetch() {
             weather_compass_needle.angle(wind_angle);
             if (is_imperial) {
                 if(temp_c!=feels_c) {
-                    sprintf(weather_info.temp, "%0.1fF (feels %0.1fF)", to_fahrenheit(temp_c), to_fahrenheit(feels_c));
+                    sprintf(weather_info.temp, "%0.1f\xC2\xB0\x46 (feels %0.1f\xC2\xB0\x46)", to_fahrenheit(temp_c), to_fahrenheit(feels_c));
                 } else {
-                    sprintf(weather_info.temp, "%0.1fF", to_fahrenheit(temp_c));
+                    sprintf(weather_info.temp, "%0.1f\xC2\xB0\x46", to_fahrenheit(temp_c));
                 }
             } else {
                 if(temp_c!=feels_c) {
-                    sprintf(weather_info.temp, "%0.1fC (feels %0.1fC)", temp_c, feels_c);
+                    sprintf(weather_info.temp, "%0.1f\xC2\xB0\x43 (feels %0.1f\xC2\xB0\x43)", temp_c, feels_c);
                 } else {
-                    sprintf(weather_info.temp, "%0.1fC", temp_c);
+                    sprintf(weather_info.temp, "%0.1f\xC2\xB0\x43", temp_c);
                 }
             }
             weather_temp_label.text(weather_info.temp);
