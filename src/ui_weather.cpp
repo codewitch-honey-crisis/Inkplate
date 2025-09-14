@@ -470,7 +470,6 @@ long ui_weather_fetch() {
             if(result<=0) {
                 result = 15*60;
             }
-            printf("Next update in %0.f minutes\n",result/60.f);
             long offs=0;
             rtc_time_get_tz_offset(&offs);
             last_updated += offs;
