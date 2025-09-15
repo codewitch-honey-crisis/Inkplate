@@ -509,16 +509,16 @@ long ui_weather_fetch() {
             weather_temp_label.text(weather_info.temp);
             
             if (is_imperial) {
-                snprintf(weather_info.wind, sizeof(weather_info.wind), "%s %0.1fmph (gust %0.1fmph)", wind_dir, to_miles(wind_kph), to_miles(gust_kph));
+                snprintf(weather_info.wind, sizeof(weather_info.wind), "%s %0.1f mph / %0.1f mph", wind_dir, to_miles(wind_kph), to_miles(gust_kph));
             } else {
-                snprintf(weather_info.wind, sizeof(weather_info.wind), "%s %0.1fkph (gust %0.1fkph)", wind_dir, wind_kph, gust_kph);
+                snprintf(weather_info.wind, sizeof(weather_info.wind), "%s %0.1f kph / %0.1f kph", wind_dir, wind_kph, gust_kph);
             }
             weather_wind_label.text(weather_info.wind);
             if (precip_mm > 0.f) {
                 if (is_imperial) {
-                    sprintf(weather_info.precipitation, "%0.2fin", to_inches(precip_mm));
+                    sprintf(weather_info.precipitation, "%0.2f in", to_inches(precip_mm));
                 } else {
-                    sprintf(weather_info.precipitation, "%0.1fmm", precip_mm);
+                    sprintf(weather_info.precipitation, "%0.1f mm", precip_mm);
                 }
             } else {
                 sprintf(weather_info.precipitation, "n/a");
@@ -527,15 +527,15 @@ long ui_weather_fetch() {
             sprintf(weather_info.humidity, "%d%%", humidity);
             weather_humidity_label.text(weather_info.humidity);
             if (is_imperial) {
-                sprintf(weather_info.visibility, "%0.1fmi", to_miles(vis_km));
+                sprintf(weather_info.visibility, "%0.1f mi", to_miles(vis_km));
             } else {
-                sprintf(weather_info.visibility, "%0.1fkm", vis_km);
+                sprintf(weather_info.visibility, "%0.1f km", vis_km);
             }
             weather_visibility_label.text(weather_info.visibility);
             if (is_imperial) {
-                sprintf(weather_info.pressure, "%0.1fpsi", to_psi(pressure_mb));
+                sprintf(weather_info.pressure, "%0.1f psi", to_psi(pressure_mb));
             } else {
-                sprintf(weather_info.pressure, "%0.1fmb", pressure_mb);
+                sprintf(weather_info.pressure, "%0.1f mb", pressure_mb);
             }
 
             weather_pressure_label.text(weather_info.pressure);
