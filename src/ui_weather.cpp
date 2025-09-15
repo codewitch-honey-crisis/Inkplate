@@ -515,12 +515,14 @@ long ui_weather_fetch() {
             }
             weather_wind_label.text(weather_info.wind);
             if (precip_mm > 0.f) {
+                weather_precipitation_label.color(ucolor_t::black);
                 if (is_imperial) {
                     sprintf(weather_info.precipitation, "%0.2f in", to_inches(precip_mm));
                 } else {
                     sprintf(weather_info.precipitation, "%0.1f mm", precip_mm);
                 }
             } else {
+                weather_precipitation_label.color(ucolor_t::gray);
                 sprintf(weather_info.precipitation, "---");
             }
             weather_precipitation_label.text(weather_info.precipitation);
