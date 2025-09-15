@@ -249,6 +249,7 @@ bool ui_weather_init() {
     sr = weather_temp_title_label.bounds().offset(0, weather_temp_title_label.dimensions().height + 1+screen_dimensions.height/20);
     sr.y2 += (fheight / 2);
     weather_temp_label.bounds(sr);
+    weather_temp_label.text_justify(uix_justify::top_middle);
     weather_temp_label.text("Fetching...");
     weather_temp_label.font(text_font);
     weather_temp_label.color(ucolor_t::black);
@@ -257,6 +258,7 @@ bool ui_weather_init() {
     sr = weather_wind_title_label.bounds().offset(0, weather_wind_title_label.dimensions().height + 1+screen_dimensions.height/20);
     sr.y2 += (fheight / 2);
     weather_wind_label.bounds(sr);
+    weather_wind_label.text_justify(uix_justify::top_middle);
     weather_wind_label.text("Fetching...");
     weather_wind_label.font(text_font);
     weather_wind_label.color(ucolor_t::black);
@@ -290,6 +292,7 @@ bool ui_weather_init() {
     sr.y2 += (fheight / 2);
     sr.offset_inplace(0, weather_precipitation_title_label.dimensions().height + 1+screen_dimensions.height/20);
     weather_precipitation_label.bounds(sr);
+    weather_precipitation_label.text_justify(uix_justify::top_middle);
     weather_precipitation_label.text("Fetching...");
     weather_precipitation_label.font(text_font);
     weather_precipitation_label.color(ucolor_t::black);
@@ -298,6 +301,7 @@ bool ui_weather_init() {
     sr = weather_humidity_title_label.bounds().offset(0, weather_humidity_title_label.dimensions().height + 1+screen_dimensions.height/20);
     sr.y2 += (fheight / 2);
     weather_humidity_label.bounds(sr);
+    weather_humidity_label.text_justify(uix_justify::top_middle);
     weather_humidity_label.text("Fetching...");
     weather_humidity_label.font(text_font);
     weather_humidity_label.color(ucolor_t::black);
@@ -331,6 +335,7 @@ bool ui_weather_init() {
     sr.y2 += (fheight / 2);
     sr.offset_inplace(0, weather_visibility_title_label.dimensions().height + 1+screen_dimensions.height/20);
     weather_visibility_label.bounds(sr);
+    weather_visibility_label.text_justify(uix_justify::top_middle);
     weather_visibility_label.text("Fetching...");
     weather_visibility_label.font(text_font);
     weather_visibility_label.color(ucolor_t::black);
@@ -339,6 +344,7 @@ bool ui_weather_init() {
     sr = weather_pressure_title_label.bounds().offset(0, weather_pressure_title_label.dimensions().height + 1+screen_dimensions.height/20);
     sr.y2 += (fheight / 2);
     weather_pressure_label.bounds(sr);
+    weather_pressure_label.text_justify(uix_justify::top_middle);
     weather_pressure_label.text("Fetching...");
     weather_pressure_label.font(text_font);
     weather_pressure_label.color(ucolor_t::black);
