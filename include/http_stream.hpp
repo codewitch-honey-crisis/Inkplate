@@ -12,6 +12,8 @@ class http_stream : public io::stream {
     unsigned long long m_position;
     bool ensure_buffer();
 public:
+    void* handle() const;
+    void set(http_handle_t handle);
     /// @brief Constructs an instance
     /// @param handle The handle 
     http_stream(http_handle_t handle);

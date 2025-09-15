@@ -133,8 +133,11 @@ typedef struct {
 static screen_gsc_t weather_screen;
 static char weather_units[64];
 static char weather_location[256];
+static char weather_timezone[128];
 static const char* weather_api_url_part = "http://api.weatherapi.com/v1/current.json?key=f188c23cb291489389755443221206&aqi=no&q=";
+static const char* time_api_url_part = "http://worldtimeapi.org/api/timezone/";
 static char weather_api_url[1025];
+static char time_api_url[1025];
 static weather_info_t weather_info;
 static icon_t weather_connected_icon;
 static icon_t weather_icon;
@@ -412,7 +415,7 @@ long ui_weather_fetch() {
         float wind_angle = 0;
         int humidity = 0, cloud = 0;
         time_t last_updated;
-        time_t local_time;
+        time_t weather_api_time;
         char wind_dir[16];
         // char wind_gust[16];
         wind_dir[0] = '\0';
@@ -434,7 +437,9 @@ long ui_weather_fetch() {
                         } else if (0 == strcmp("country", reader.value()) && reader.read()) {
                             strcpy(weather_info.country, reader.value());
                         } else if (0 == strcmp("localtime_epoch", reader.value()) && reader.read()) {
-                            local_time = (time_t)reader.value_int();
+                            weather_api_time = (time_t)reader.value_int();
+                        } else if (0 == strcmp("tz_id", reader.value()) && reader.read()) {
+                            strcpy(weather_timezone,reader.value());
                         }
                     }
                 } else if (state == J_CUR) {
@@ -477,16 +482,63 @@ long ui_weather_fetch() {
         if (success) {
             uint32_t fetch_time_ms = timing_get_ms() - start_ts;
             printf("Weather fetch time: %ldms\n", (long)fetch_time_ms);
+            puts("Fetching time information");
+            strcpy(time_api_url,time_api_url_part);
+            strcat(time_api_url,weather_timezone);
+            uint32_t time_fetch_time_start_ts = timing_get_ms();
+            handle = http_init(time_api_url);
+            long offs = -1;            
+            long dst_offs;
+            bool is_dst = false;
+            time_t now=0;
+            if(handle!=nullptr) {
+                status = http_read_status_and_headers(handle);
+                if(status>=200&&status<=299) {
+                    stm.set(handle);
+                    reader.set(stm);
+                    while(reader.read()) {
+                        if(reader.node_type()==json_node_type::field) {
+                            if(0==strcmp("dst",reader.value()) && reader.read()) {
+                                is_dst = reader.value_bool();
+                            } else if(0==strcmp("dst_offset",reader.value()) && reader.read()) {
+                                dst_offs = (long)reader.value_int();
+                            } else if(0==strcmp("raw_offset",reader.value()) && reader.read()) {
+                                offs = (long)reader.value_int();
+                            } else if(0==strcmp("unixtime",reader.value()) && reader.read()) {
+                                now = (time_t)reader.value_int();
+                            } 
+                        }
+                    }
+                    printf("Fetched time info in %ldms\n",(long)(timing_get_ms()-time_fetch_time_start_ts));
+                }
+                http_end(handle);
+            }
+            if(offs!=-1) {
+                if(is_dst){
+                    offs+=dst_offs;
+                }
+                puts("Retrieved UTC offset for current timezone");
+                if(now!=0) {
+                    now = (time_t)(((long long)now)+offs);
+                    printf("Current local time is: %s",asctime(localtime(&now)));
+                    if(rtc_time_set(localtime(&now))) {
+                        puts("Synced RTC clock to local time");
+                    } else {
+                        puts("Failed attempting to sync RTC clock to local time");
+                    }
+                }
+            }
             bool is_imperial = (0 == strcmp(weather_units, "imperial") || (0 == strcmp(weather_units, "auto") && 0 == strcmp(weather_info.country, "USA")));
             weather_area_label.text(weather_info.area);
             weather_condition_label.text(weather_info.condition);
             strcpy(weather_info.last_updated, "Updated: ");
-            long result = (last_updated + (15 * 60)) - local_time;
+            long result = (last_updated + (15 * 60)) - weather_api_time;
             if (result <= 60) {
                 result = 5 * 60;
             }
-            long offs = 0;
-            rtc_time_get_tz_offset(&offs);
+            if(offs==-1) {
+                rtc_time_get_tz_offset(&offs);
+            }
             last_updated += offs;
             tm* t_tm = localtime(&last_updated);
             strftime(weather_info.last_updated + strlen(weather_info.last_updated), 32, "%I:%M %p", t_tm);

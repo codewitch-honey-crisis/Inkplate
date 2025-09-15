@@ -21,6 +21,14 @@ bool http_stream::ensure_buffer() {
     }
     return true;
 }
+void* http_stream::handle() const {
+    return m_client;
+}
+void http_stream::set(http_handle_t handle) {
+    m_client = handle;
+    m_buffer_size = 0;
+    m_buffer_start = 0;
+}
 int http_stream::getch() {
     ensure_buffer();
     if(m_buffer_start>=m_buffer_size) {
