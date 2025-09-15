@@ -13,8 +13,8 @@
 #include "http.h"
 #include "http_stream.hpp"
 #include "json.hpp"
-#include "timing.h"
 #include "rtc_time.h"
+#include "timing.h"
 #if defined(INKPLATE10) || defined(INKPLATE10V2)
 #include "inkplate10/power.h"
 #endif
@@ -169,15 +169,15 @@ bool ui_weather_init() {
     weather_screen.buffer1(display_buffer_8bit());
     weather_screen.dimensions((ssize16)screen_dimensions);
     weather_screen.background_color(scolor_gsc_t::white);
-    const float margin = screen_dimensions.width/100;
+    const float margin = screen_dimensions.width / 100;
     const float fheight = screen_dimensions.width / 8.f;
     const float ftheight = fheight / 2.f;
-    weather_icon.bounds(srect16(spoint16::zero(), ssize16(screen_dimensions.width / 8, screen_dimensions.width / 8)).offset(margin,margin));
+    weather_icon.bounds(srect16(spoint16::zero(), ssize16(screen_dimensions.width / 8, screen_dimensions.width / 8)).offset(margin, margin));
     weather_icon.svg_size(connectivity_wifi_dimensions);
     weather_icon.svg(connectivity_wifi);
     weather_screen.register_control(weather_icon);
     srect16 sr = weather_icon.bounds();
-    sr.offset_inplace(weather_screen.dimensions().width - weather_icon.dimensions().width-margin, 0);
+    sr.offset_inplace(weather_screen.dimensions().width - weather_icon.dimensions().width - margin, 0);
     const float deflate = -screen_dimensions.width / 120;
     weather_compass.bounds(sr.inflate(deflate, deflate));
     weather_compass.svg_size(compass_dimensions);
@@ -186,10 +186,10 @@ bool ui_weather_init() {
     weather_compass_needle.bounds(sr);
     weather_screen.register_control(weather_compass_needle);
     sr = weather_icon.bounds();
-    sr.offset_inplace(weather_icon.dimensions().width + 2, 0);
+    sr.offset_inplace(weather_icon.dimensions().width + margin, 0);
     sr.y2 /= 2;
     sr.y2 -= 1;
-    sr.x2 = weather_screen.bounds().x2/2;
+    sr.x2 = weather_screen.bounds().x2 / 2;
     weather_area_label.bounds(sr);
     weather_area_label.font(text_font);
     constexpr static const uint8_t LP = .5f * 255;
@@ -198,14 +198,14 @@ bool ui_weather_init() {
     weather_area_label.text("Fetching...");
     weather_screen.register_control(weather_area_label);
 
-    sr.offset_inplace(0, sr.height() + 2);
+    sr.offset_inplace(0, sr.height() + margin);
     weather_condition_label.bounds(sr);
     weather_condition_label.text("Fetching...");
     weather_condition_label.font(text_font);
     weather_condition_label.color(ucolor_t::black);
     weather_screen.register_control(weather_condition_label);
 #if defined(INKPLATE10) || defined(INKPLATE10V2)
-    sr.offset_inplace(sr.width()+margin,0);
+    sr.offset_inplace(sr.width() + margin, 0);
     weather_battery_label.bounds(sr);
     weather_battery_label.text("");
     weather_battery_label.font(text_font);
@@ -214,19 +214,19 @@ bool ui_weather_init() {
 #endif
 
     sr = weather_area_label.bounds();
-    sr.offset_inplace(sr.width()+margin,0);
-    sr.x2-=weather_compass_needle.dimensions().width;
+    sr.offset_inplace(sr.width() + margin, 0);
+    sr.x2 -= weather_compass_needle.dimensions().width;
     weather_updated_label.bounds(sr);
     weather_updated_label.text("Fetching...");
     weather_updated_label.font(text_font);
     weather_updated_label.color(ucolor_t::black);
     weather_screen.register_control(weather_updated_label);
-    static const float bradius = screen_dimensions.width/50;
+    static const float bradius = screen_dimensions.width / 50;
     sr = srect16(0, weather_icon.bounds().y2 + 2, weather_screen.bounds().x2 / 2 - 1, weather_icon.bounds().y2 + 2 + (fheight / 2));
-    sr.offset_inplace(margin,0);
-    sr.x2-=(margin*.5f);
+    sr.offset_inplace(margin, 0);
+    sr.x2 -= (margin * .5f);
     weather_temp_title_label.bounds(sr);
-    weather_temp_title_label.background_round({bradius,bradius});
+    weather_temp_title_label.background_round({bradius, bradius});
     weather_temp_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
     weather_temp_title_label.font(text_font);
     weather_temp_title_label.color(ucolor_t::white);
@@ -236,9 +236,9 @@ bool ui_weather_init() {
     weather_screen.register_control(weather_temp_title_label);
 
     sr.offset_inplace(sr.width() + margin, 0);
-    sr.x2-=(margin*2);
+    sr.x2 -= (margin * 2);
     weather_wind_title_label.bounds(sr);
-    weather_wind_title_label.background_round({bradius,bradius});
+    weather_wind_title_label.background_round({bradius, bradius});
     weather_wind_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
     weather_wind_title_label.font(text_font);
     weather_wind_title_label.color(ucolor_t::white);
@@ -247,7 +247,7 @@ bool ui_weather_init() {
     weather_wind_title_label.text_justify(uix_justify::center);
     weather_screen.register_control(weather_wind_title_label);
 
-    sr = weather_temp_title_label.bounds().offset(0, weather_temp_title_label.dimensions().height + 1+screen_dimensions.height/20);
+    sr = weather_temp_title_label.bounds().offset(0, weather_temp_title_label.dimensions().height + 1 + screen_dimensions.height / 20);
     sr.y2 += (fheight / 2);
     weather_temp_label.bounds(sr);
     weather_temp_label.text_justify(uix_justify::top_middle);
@@ -256,7 +256,7 @@ bool ui_weather_init() {
     weather_temp_label.color(ucolor_t::black);
     weather_screen.register_control(weather_temp_label);
 
-    sr = weather_wind_title_label.bounds().offset(0, weather_wind_title_label.dimensions().height + 1+screen_dimensions.height/20);
+    sr = weather_wind_title_label.bounds().offset(0, weather_wind_title_label.dimensions().height + 1 + screen_dimensions.height / 20);
     sr.y2 += (fheight / 2);
     weather_wind_label.bounds(sr);
     weather_wind_label.text_justify(uix_justify::top_middle);
@@ -268,7 +268,7 @@ bool ui_weather_init() {
     sr = weather_temp_title_label.bounds();
     sr.offset_inplace(0, (sr.height() * 2) + (fheight / 2));
     weather_precipitation_title_label.bounds(sr);
-    weather_precipitation_title_label.background_round({bradius,bradius});
+    weather_precipitation_title_label.background_round({bradius, bradius});
     weather_precipitation_title_label.text("PRECIPITATION");
     weather_precipitation_title_label.font(text_font);
     weather_precipitation_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
@@ -278,9 +278,9 @@ bool ui_weather_init() {
     weather_screen.register_control(weather_precipitation_title_label);
 
     sr.offset_inplace(sr.width() + margin, 0);
-    sr.x2-=(margin*2);
+    sr.x2 -= (margin * 2);
     weather_humidity_title_label.bounds(sr);
-    weather_humidity_title_label.background_round({bradius,bradius});
+    weather_humidity_title_label.background_round({bradius, bradius});
     weather_humidity_title_label.text("HUMIDITY");
     weather_humidity_title_label.font(text_font);
     weather_humidity_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
@@ -291,7 +291,7 @@ bool ui_weather_init() {
 
     sr = weather_precipitation_title_label.bounds();
     sr.y2 += (fheight / 2);
-    sr.offset_inplace(0, weather_precipitation_title_label.dimensions().height + 1+screen_dimensions.height/20);
+    sr.offset_inplace(0, weather_precipitation_title_label.dimensions().height + 1 + screen_dimensions.height / 20);
     weather_precipitation_label.bounds(sr);
     weather_precipitation_label.text_justify(uix_justify::top_middle);
     weather_precipitation_label.text("Fetching...");
@@ -299,7 +299,7 @@ bool ui_weather_init() {
     weather_precipitation_label.color(ucolor_t::black);
     weather_screen.register_control(weather_precipitation_label);
 
-    sr = weather_humidity_title_label.bounds().offset(0, weather_humidity_title_label.dimensions().height + 1+screen_dimensions.height/20);
+    sr = weather_humidity_title_label.bounds().offset(0, weather_humidity_title_label.dimensions().height + 1 + screen_dimensions.height / 20);
     sr.y2 += (fheight / 2);
     weather_humidity_label.bounds(sr);
     weather_humidity_label.text_justify(uix_justify::top_middle);
@@ -311,7 +311,7 @@ bool ui_weather_init() {
     sr = weather_precipitation_title_label.bounds();
     sr.offset_inplace(0, (sr.height() * 2) + (fheight / 2));
     weather_visibility_title_label.bounds(sr);
-    weather_visibility_title_label.background_round({bradius,bradius});
+    weather_visibility_title_label.background_round({bradius, bradius});
     weather_visibility_title_label.text("VISIBILITY");
     weather_visibility_title_label.font(text_font);
     weather_visibility_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
@@ -321,9 +321,9 @@ bool ui_weather_init() {
     weather_screen.register_control(weather_visibility_title_label);
 
     sr.offset_inplace(sr.width() + margin, 0);
-    sr.x2-=(margin*2);
+    sr.x2 -= (margin * 2);
     weather_pressure_title_label.bounds(sr);
-    weather_pressure_title_label.background_round({bradius,bradius});
+    weather_pressure_title_label.background_round({bradius, bradius});
     weather_pressure_title_label.text("PRESSURE");
     weather_pressure_title_label.font(text_font);
     weather_pressure_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
@@ -334,7 +334,7 @@ bool ui_weather_init() {
 
     sr = weather_visibility_title_label.bounds();
     sr.y2 += (fheight / 2);
-    sr.offset_inplace(0, weather_visibility_title_label.dimensions().height + 1+screen_dimensions.height/20);
+    sr.offset_inplace(0, weather_visibility_title_label.dimensions().height + 1 + screen_dimensions.height / 20);
     weather_visibility_label.bounds(sr);
     weather_visibility_label.text_justify(uix_justify::top_middle);
     weather_visibility_label.text("Fetching...");
@@ -342,7 +342,7 @@ bool ui_weather_init() {
     weather_visibility_label.color(ucolor_t::black);
     weather_screen.register_control(weather_visibility_label);
 
-    sr = weather_pressure_title_label.bounds().offset(0, weather_pressure_title_label.dimensions().height + 1+screen_dimensions.height/20);
+    sr = weather_pressure_title_label.bounds().offset(0, weather_pressure_title_label.dimensions().height + 1 + screen_dimensions.height / 20);
     sr.y2 += (fheight / 2);
     weather_pressure_label.bounds(sr);
     weather_pressure_label.text_justify(uix_justify::top_middle);
@@ -389,11 +389,11 @@ long ui_weather_fetch() {
         }
     }
 #if defined(INKPLATE10) || defined(INKPLATE10V2)
-    battery_info[0]='\0';
+    battery_info[0] = '\0';
     const float batt_voltage = power_battery_voltage();
-    if(batt_voltage!=0) {
+    if (batt_voltage != 0) {
         const float batt_level = power_battery_level();
-        snprintf(battery_info,sizeof(battery_info)-1,"Charge: %0.f%% (%0.2fv)",batt_level*100.f,batt_voltage);
+        snprintf(battery_info, sizeof(battery_info) - 1, "Charge: %0.f%% (%0.2fv)", batt_level * 100.f, batt_voltage);
         weather_battery_label.text(battery_info);
     }
 #endif
@@ -436,7 +436,6 @@ long ui_weather_fetch() {
                         } else if (0 == strcmp("localtime_epoch", reader.value()) && reader.read()) {
                             local_time = (time_t)reader.value_int();
                         }
-                        
                     }
                 } else if (state == J_CUR) {
                     if (reader.node_type() == json_node_type::field) {
@@ -476,39 +475,38 @@ long ui_weather_fetch() {
         }
         http_end(handle);
         if (success) {
-            
             uint32_t fetch_time_ms = timing_get_ms() - start_ts;
             printf("Weather fetch time: %ldms\n", (long)fetch_time_ms);
             bool is_imperial = (0 == strcmp(weather_units, "imperial") || (0 == strcmp(weather_units, "auto") && 0 == strcmp(weather_info.country, "USA")));
             weather_area_label.text(weather_info.area);
             weather_condition_label.text(weather_info.condition);
-            strcpy(weather_info.last_updated,"Updated: ");
-            long result = (last_updated+(15*60))-local_time;
-            if(result<=60) {
-                result = 5*60;
+            strcpy(weather_info.last_updated, "Updated: ");
+            long result = (last_updated + (15 * 60)) - local_time;
+            if (result <= 60) {
+                result = 5 * 60;
             }
-            long offs=0;
+            long offs = 0;
             rtc_time_get_tz_offset(&offs);
             last_updated += offs;
-            tm* t_tm= localtime(&last_updated);
-            strftime(weather_info.last_updated+strlen(weather_info.last_updated),32,"%I:%M %p",t_tm);
+            tm* t_tm = localtime(&last_updated);
+            strftime(weather_info.last_updated + strlen(weather_info.last_updated), 32, "%I:%M %p", t_tm);
             weather_updated_label.text(weather_info.last_updated);
             weather_compass_needle.angle(wind_angle);
             if (is_imperial) {
-                if(temp_c!=feels_c) {
+                if (temp_c != feels_c) {
                     sprintf(weather_info.temp, "%0.1f\xC2\xB0\x46 (feels %0.1f\xC2\xB0\x46)", to_fahrenheit(temp_c), to_fahrenheit(feels_c));
                 } else {
                     sprintf(weather_info.temp, "%0.1f\xC2\xB0\x46", to_fahrenheit(temp_c));
                 }
             } else {
-                if(temp_c!=feels_c) {
+                if (temp_c != feels_c) {
                     sprintf(weather_info.temp, "%0.1f\xC2\xB0\x43 (feels %0.1f\xC2\xB0\x43)", temp_c, feels_c);
                 } else {
                     sprintf(weather_info.temp, "%0.1f\xC2\xB0\x43", temp_c);
                 }
             }
             weather_temp_label.text(weather_info.temp);
-            
+
             if (is_imperial) {
                 snprintf(weather_info.wind, sizeof(weather_info.wind), "%s %0.1f mph / %0.1f mph", wind_dir, to_miles(wind_kph), to_miles(gust_kph));
             } else {
@@ -524,7 +522,7 @@ long ui_weather_fetch() {
                 }
             } else {
                 weather_precipitation_label.color(ucolor_t::gray);
-                sprintf(weather_info.precipitation, "---");
+                sprintf(weather_info.precipitation, "n/a");
             }
             weather_precipitation_label.text(weather_info.precipitation);
             sprintf(weather_info.humidity, "%d%%", humidity);
@@ -552,7 +550,7 @@ long ui_weather_fetch() {
                         weather_icon.svg(weather_cloud_rain);
                     }
                 } else {
-                    if(cloud>=75) {
+                    if (cloud >= 75) {
                         weather_icon.svg(weather_cloud);
                     }
                     if (cloud >= 25) {
@@ -576,7 +574,7 @@ long ui_weather_fetch() {
                     }
                 }
             }
-            printf("Next update in %0.f minutes\n",result/60.f);
+            printf("Next update in %0.f minutes\n", result / 60.f);
             uint32_t ui_start_ts = timing_get_ms();
             puts("UI update started");
             weather_screen.update();
