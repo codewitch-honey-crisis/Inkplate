@@ -523,12 +523,8 @@ long ui_weather_fetch() {
                 }
                 puts("Retrieved UTC offset for current timezone");
                 if(now!=0) {
-                    long tdiff = (now+15*60)-weather_api_time;
-                    if(tdiff-result>0 && tdiff-result<(15*60)) {
-                        puts("Adjusting next fetch time based on current time");
-                        result = tdiff;
-                    }
                     now = (time_t)(((long long)now)+offs);
+                    printf("Weather API reported time is: %s",asctime(localtime(&weather_api_time)));
                     printf("Current local time is: %s",asctime(localtime(&now)));
                     if(rtc_time_set(localtime(&now))) {
                         puts("Synced RTC clock to local time");
