@@ -16,5 +16,5 @@ If the specified location is in the USA, the station defaults to imperial units.
 
 Location can be specified as geo-coordinates, or in the US/CA/UK can be a city or postal/zipcode
 
-The timezone should also be properly configured to show the update time as local time.
+The timezone may also be properly configured to show the update time as local time, but this isn't required since it can fetch it from worldtime, which it also uses to set the embedded RTC (which is otherwise unused by this project)
 
