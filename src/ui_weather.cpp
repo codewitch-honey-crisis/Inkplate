@@ -513,12 +513,21 @@ long ui_weather_fetch() {
                 }
                 http_end(handle);
             }
+            long result = (last_updated + (15 * 60)) - weather_api_time;
+            if (result <= 60) {
+                result = 5 * 60;
+            }
             if(offs!=-1) {
                 if(is_dst){
                     offs+=dst_offs;
                 }
                 puts("Retrieved UTC offset for current timezone");
                 if(now!=0) {
+                    long tdiff = (now+15*60)-weather_api_time;
+                    if(tdiff-result>0 && tdiff-result<(15*60)) {
+                        puts("Adjusting next fetch time based on current time");
+                        result = tdiff;
+                    }
                     now = (time_t)(((long long)now)+offs);
                     printf("Current local time is: %s",asctime(localtime(&now)));
                     if(rtc_time_set(localtime(&now))) {
@@ -527,18 +536,14 @@ long ui_weather_fetch() {
                         puts("Failed attempting to sync RTC clock to local time");
                     }
                 }
+            } else {
+                rtc_time_get_tz_offset(&offs);
             }
             bool is_imperial = (0 == strcmp(weather_units, "imperial") || (0 == strcmp(weather_units, "auto") && 0 == strcmp(weather_info.country, "USA")));
             weather_area_label.text(weather_info.area);
             weather_condition_label.text(weather_info.condition);
             strcpy(weather_info.last_updated, "Updated: ");
-            long result = (last_updated + (15 * 60)) - weather_api_time;
-            if (result <= 60) {
-                result = 5 * 60;
-            }
-            if(offs==-1) {
-                rtc_time_get_tz_offset(&offs);
-            }
+            
             last_updated += offs;
             tm* t_tm = localtime(&last_updated);
             strftime(weather_info.last_updated + strlen(weather_info.last_updated), 32, "%I:%M %p", t_tm);
