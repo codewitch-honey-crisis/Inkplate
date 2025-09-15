@@ -224,6 +224,7 @@ bool ui_weather_init() {
     static const float bradius = screen_dimensions.width/50;
     sr = srect16(0, weather_icon.bounds().y2 + 2, weather_screen.bounds().x2 / 2 - 1, weather_icon.bounds().y2 + 2 + (fheight / 2));
     sr.offset_inplace(margin,0);
+    sr.x2-=(margin*.5f);
     weather_temp_title_label.bounds(sr);
     weather_temp_title_label.background_round({bradius,bradius});
     weather_temp_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
@@ -234,7 +235,7 @@ bool ui_weather_init() {
     weather_temp_title_label.text_justify(uix_justify::center);
     weather_screen.register_control(weather_temp_title_label);
 
-    sr.offset_inplace(sr.width() + 2, 0);
+    sr.offset_inplace(sr.width() + margin, 0);
     sr.x2-=(margin*2);
     weather_wind_title_label.bounds(sr);
     weather_wind_title_label.background_round({bradius,bradius});
@@ -276,7 +277,7 @@ bool ui_weather_init() {
     weather_precipitation_title_label.font_size(ftheight);
     weather_screen.register_control(weather_precipitation_title_label);
 
-    sr.offset_inplace(sr.width() + 2, 0);
+    sr.offset_inplace(sr.width() + margin, 0);
     sr.x2-=(margin*2);
     weather_humidity_title_label.bounds(sr);
     weather_humidity_title_label.background_round({bradius,bradius});
@@ -319,7 +320,7 @@ bool ui_weather_init() {
     weather_visibility_title_label.font_size(ftheight);
     weather_screen.register_control(weather_visibility_title_label);
 
-    sr.offset_inplace(sr.width() + 2, 0);
+    sr.offset_inplace(sr.width() + margin, 0);
     sr.x2-=(margin*2);
     weather_pressure_title_label.bounds(sr);
     weather_pressure_title_label.background_round({bradius,bradius});
