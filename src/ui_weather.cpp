@@ -521,7 +521,7 @@ long ui_weather_fetch() {
                     sprintf(weather_info.precipitation, "%0.1f mm", precip_mm);
                 }
             } else {
-                sprintf(weather_info.precipitation, "n/a");
+                sprintf(weather_info.precipitation, "---");
             }
             weather_precipitation_label.text(weather_info.precipitation);
             sprintf(weather_info.humidity, "%d%%", humidity);
