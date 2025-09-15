@@ -205,7 +205,7 @@ bool ui_weather_init() {
     weather_condition_label.color(ucolor_t::black);
     weather_screen.register_control(weather_condition_label);
 #if defined(INKPLATE10) || defined(INKPLATE10V2)
-    sr.offset_inplace(sr.width()+1,0);
+    sr.offset_inplace(sr.width()+margin,0);
     weather_battery_label.bounds(sr);
     weather_battery_label.text("");
     weather_battery_label.font(text_font);
@@ -214,7 +214,7 @@ bool ui_weather_init() {
 #endif
 
     sr = weather_area_label.bounds();
-    sr.offset_inplace(sr.width()+1,0);
+    sr.offset_inplace(sr.width()+margin,0);
     sr.x2-=weather_compass_needle.dimensions().width;
     weather_updated_label.bounds(sr);
     weather_updated_label.text("Fetching...");
