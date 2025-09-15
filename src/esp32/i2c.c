@@ -49,6 +49,7 @@ bool i2c_init(void) {
     cfg.i2c_port = I2C_PORT;
     cfg.sda_io_num = I2C_SDA;
     cfg.scl_io_num = I2C_SCL;
+    cfg.flags.enable_internal_pullup = true;
     cfg.trans_queue_depth = 10;
     if(ESP_OK!=i2c_new_master_bus(&cfg,&i2c_handle)) {
         ESP_LOGE(TAG,"Could not install I2C driver");
