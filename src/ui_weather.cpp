@@ -514,9 +514,6 @@ long ui_weather_fetch() {
                 http_end(handle);
             }
             long result = (last_updated + (15 * 60)) - weather_api_time;
-            if (result <= 60) {
-                result = 5 * 60;
-            }
             if(offs!=-1) {
                 if(is_dst){
                     offs+=dst_offs;
@@ -537,6 +534,10 @@ long ui_weather_fetch() {
             } else {
                 rtc_time_get_tz_offset(&offs);
             }
+            if (result <= 60) {
+                result = 5 * 60;
+            }
+            
             bool is_imperial = (0 == strcmp(weather_units, "imperial") || (0 == strcmp(weather_units, "auto") && 0 == strcmp(weather_info.country, "USA")));
             weather_area_label.text(weather_info.area);
             weather_condition_label.text(weather_info.condition);
