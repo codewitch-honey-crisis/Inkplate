@@ -174,6 +174,8 @@ extern "C" void loop(void) {
             }
             fetch_ts=timing_get_ms();
             next_update = ui_weather_fetch();
+            printf("Next update in %0.f minutes\n", next_update / 60.f);
+            
 #ifdef INKPLATE10V2            
             // we'll be sleeping, so we may as well end this a little early to save some power.
             puts("Shutting down network");

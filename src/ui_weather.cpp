@@ -630,7 +630,6 @@ long ui_weather_fetch() {
                     }
                 }
             }
-            printf("Next update in %0.f minutes\n", result / 60.f);
             uint32_t ui_start_ts = timing_get_ms();
             puts("UI update started");
             weather_screen.update();
