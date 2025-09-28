@@ -186,7 +186,7 @@ extern "C" void loop(void) {
             uint32_t transfer_ts = timing_get_ms();
             puts("Begin display panel transfer");
             if (display_update_8bit()) {
-                printf("Display panel transfer complete in %ldms. Turning off display.\n",(long)(timing_get_ms()-transfer_ts));
+                printf("Display panel transfer complete in %0.2f seconds. Turning off display.\n",(long)(timing_get_ms()-transfer_ts)/1000.f);
                 display_sleep();
             }
             if(!next_update) {

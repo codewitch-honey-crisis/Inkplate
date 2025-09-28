@@ -633,7 +633,7 @@ long ui_weather_fetch() {
             uint32_t ui_start_ts = timing_get_ms();
             puts("UI update started");
             weather_screen.update();
-            printf("UI updated in %ldms\n", (long)(timing_get_ms() - ui_start_ts));
+            printf("UI updated in %0.2f seconds\n", (long)(timing_get_ms() - ui_start_ts)/1000.f);
             return result;
         }
         return -1;
