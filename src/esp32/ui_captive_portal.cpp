@@ -97,7 +97,6 @@ bool ui_captive_portal_set_ap(const char* address, const char* ssid, const char*
     setup_label.text("Connect to AP to configure:");
     // https://www.wi-fi.org/system/files/WPA3%20Specification%20v3.5.pdf (page 37)
     //WIFI:T:WPA;S:<SSID>;P:<PASS>;;
-    // Per WPA3 spec PDF: WIFI:T:<TYPE>;S:<SSID>;P:<PASS>;;
     strcpy(setup_qr_creds, "WIFI:T:WPA;S:");
     strcat(setup_qr_creds, ssid);
     strcat(setup_qr_creds, ";P:");
