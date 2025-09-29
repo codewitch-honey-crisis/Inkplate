@@ -140,6 +140,8 @@ extern "C" void loop(void) {
             }
             fetch_ts=timing_get_ms();
             next_update = ui_weather_fetch();
+            printf("Next update in %0.f minutes\n", next_update / 60.f);
+            
 #ifdef INKPLATE10V2            
             // we'll be sleeping, so we may as well end this a little early to save some power.
             puts("Shutting down network");
@@ -150,7 +152,7 @@ extern "C" void loop(void) {
             uint32_t transfer_ts = timing_get_ms();
             puts("Begin display panel transfer");
             if (display_update_8bit()) {
-                printf("Display panel transfer complete in %ldms. Turning off display.\n",(long)(timing_get_ms()-transfer_ts));
+                printf("Display panel transfer complete in %0.2f seconds. Turning off display.\n",(long)(timing_get_ms()-transfer_ts)/1000.f);
                 display_sleep();
             }
             if(!next_update) {
