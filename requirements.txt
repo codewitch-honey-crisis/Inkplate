@@ -1,0 +1,6 @@
+# Python dependencies for build tools
+# Install with: pip3 install -r requirements.txt
+
+# Brotli compression for better web content compression
+# If not installed, the build will automatically fall back to deflate
+brotli>=1.0.9

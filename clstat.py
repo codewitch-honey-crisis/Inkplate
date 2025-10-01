@@ -1,5 +1,10 @@
 import argparse
 import zlib
+try:
+    import brotli
+    BROTLI_AVAILABLE = True
+except ImportError:
+    BROTLI_AVAILABLE = False
 
 line = 1
 firstEmit = 1
@@ -15,7 +20,7 @@ cmdargParser.add_argument("-S", "--status", help = "Indicates the HTTP status co
 cmdargParser.add_argument("-T", "--text", help = "Indicates the HTTP status text to use",required=False,default="OK",type=str)
 cmdargParser.add_argument("-n","--nostatus", required= False, help = "Suppress the status line",action="store_true")
 cmdargParser.add_argument("-t","--type", required= False, help = "Indicates the content type of the file. If not specified, it will be based on the file extension",type=str)
-cmdargParser.add_argument("-c","--compress", required= False, help = "Indicates the type of compression to use on static content: none, gzip, deflate, or auto.",default="auto",type=str)
+cmdargParser.add_argument("-c","--compress", required= False, help = "Indicates the type of compression to use on static content: none, gzip, deflate, brotli, or auto.",default="auto",type=str)
 cmdargParser.add_argument("-i","--indent", required=False,help = "Indicates the number of spaces to indent each line")
 cmdargParser.add_argument("-l","--eol",required=False,default="unix",help="Indicates the style of line ending to use, either \"windows\", \"unix\" or \"apple\"",type=str)
 cmdargParser.add_argument("-a","--append", required= False, help = "Append to the output file",action="store_true")
@@ -31,6 +36,33 @@ def gzip_encode(content):
     gzip_compress = zlib.compressobj(9, zlib.DEFLATED, zlib.MAX_WBITS | 16)
     data = gzip_compress.compress(content) + gzip_compress.flush()
     return data
+
+def brotli_encode(content, mime_type=None):
+    if not BROTLI_AVAILABLE:
+        raise Exception("Brotli compression requested but brotli module is not available. Install with: pip3 install brotli")
+
+    # Select compression mode based on content type
+    mode = brotli.MODE_GENERIC  # Default
+
+    if mime_type:
+        if mime_type.startswith("text/") or mime_type in [
+            "application/json",
+            "application/javascript",
+            "application/xml",
+            "application/xhtml+xml",
+            "image/svg+xml"
+        ]:
+            mode = brotli.MODE_TEXT
+        elif mime_type.startswith("font/") or mime_type in [
+            "application/font-woff",
+            "application/font-woff2",
+            "application/x-font-ttf",
+            "application/x-font-truetype",
+            "application/x-font-opentype"
+        ]:
+            mode = brotli.MODE_FONT
+
+    return brotli.compress(content, quality=11, mode=mode)
 
 def toSZLiteralBytes(data, startSpacing = 0):
     global eol
@@ -125,34 +157,28 @@ def emitResponseBlock(content):
         emit(cmdargs.state)
         emit(f");{eol}")
 
-def processCompression(inpba):
-    result = b''
-    gzip_data = b''
-    defl_data = b''
-    type = None
-    auto = cmdargs.compress != "deflate" and cmdargs.compress != "none" and cmdargs.compress!="gzip"
-    if cmdargs.compress != "none":
-        if cmdargs.compress != "deflate":
-            gzip_data = gzip_encode(inpba)
-        if cmdargs.compress != "gzip":
-            defl_data = deflate_encode(inpba)
-    else:
-        result = inpba
-        return (type,result)
-    if auto:
-        if len(gzip_data) >= len(defl_data):
-            cmdargs.compress = "deflate"
-            type = "deflate"
-            result = defl_data
-        else:
-            cmdargs.compress = "gzip"
-            type = "gzip"
-            result = gzip_data
+def processCompression(inpba, mime_type=None):
+    if cmdargs.compress == "none":
+        return (None, inpba)
+
+    if cmdargs.compress == "auto":
+        comp_algos = []
+        comp_algos.append(("gzip", gzip_encode(inpba)))
+        comp_algos.append(("deflate", deflate_encode(inpba)))
+        if BROTLI_AVAILABLE:
+            comp_algos.append(("br", brotli_encode(inpba, mime_type)))
+
+        return min(comp_algos, key=lambda x: len(x[1]))
+
+    if cmdargs.compress == "gzip":
+        return ("gzip", gzip_encode(inpba))
     elif cmdargs.compress == "deflate":
-        result = defl_data
+        return ("deflate", deflate_encode(inpba))
+    elif cmdargs.compress == "brotli":
+        return ("br", brotli_encode(inpba, mime_type))
     else:
-        result = gzip_data
-    return (type,result)
+        raise Exception(f"Unknown compression algorithm: {cmdargs.compress}")
+
 
 def emitDataFieldDecl(prologue, data):
     global eol
@@ -368,7 +394,7 @@ def run():
     else:
         mime = cmdargs.type
 
-    cmp = processCompression(input)
+    cmp = processCompression(input, mime)
     headers = ""
     if cmdargs.nostatus == False:
         headers += f"HTTP/1.1 {cmdargs.status} {cmdargs.text}\r\n"
