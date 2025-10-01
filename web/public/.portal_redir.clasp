@@ -1,0 +1,4 @@
+<%@status code="302" text="Found"%>
+<%@header name="Content-Type" value="text/plain"%>
+<%@header name="Location" value="/index.html"%>
+Redirecting to portal

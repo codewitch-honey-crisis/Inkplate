@@ -1,0 +1,5 @@
+{
+  "ssid": "MyWiFi",
+  "pass": "password123",
+  "ap_list": ["HomeNetwork", "OfficeWiFi", "TestSSID", "HomeNetwork", "GuestNetwork"]
+}
