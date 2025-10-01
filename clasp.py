@@ -1,5 +1,10 @@
 import argparse
 import zlib
+try:
+    import brotli
+    BROTLI_AVAILABLE = True
+except ImportError:
+    BROTLI_AVAILABLE = False
 line = 1
 firstEmit = 1
 indent = ""
@@ -30,6 +35,11 @@ def gzip_encode(content):
     gzip_compress = zlib.compressobj(9, zlib.DEFLATED, zlib.MAX_WBITS | 16)
     data = gzip_compress.compress(content) + gzip_compress.flush()
     return data
+
+def brotli_encode(content):
+    if not BROTLI_AVAILABLE:
+        raise Exception("Brotli compression requested but brotli module is not available. Install with: pip3 install brotli")
+    return brotli.compress(content, quality=11, mode=brotli.MODE_TEXT)
 
 def toSZLiteralBytes(data, startSpacing = 0):
     global eol
@@ -168,33 +178,26 @@ def staticLen(input):
 
 def processCompression(inp):
     inpba = inp.encode("utf-8")
-    result = b''
-    gzip_data = b''
-    defl_data = b''
-    type = None
-    auto = cmdargs.compress != "deflate" and cmdargs.compress != "none" and cmdargs.compress!="gzip"
-    if cmdargs.compress != "none":
-        if cmdargs.compress != "deflate":
-            gzip_data = gzip_encode(inpba)
-        if cmdargs.compress != "gzip":
-            defl_data = deflate_encode(inpba)
-    else:
-        result = inpba
-        return (type,result)
-    if auto:
-        if len(gzip_data) >= len(defl_data):
-            cmdargs.compress = "deflate"
-            type = "deflate"
-            result = defl_data
-        else:
-            cmdargs.compress = "gzip"
-            type = "gzip"
-            result = gzip_data
+    if cmdargs.compress == "none":
+        return (None, inpba)
+
+    if cmdargs.compress == "auto":
+        comp_algos = []
+        comp_algos.append(("gzip", gzip_encode(inpba)))
+        comp_algos.append(("deflate", deflate_encode(inpba)))
+        if BROTLI_AVAILABLE:
+            comp_algos.append(("br", brotli_encode(inpba)))
+
+        return min(comp_algos, key=lambda x: len(x[1]))
+
+    if cmdargs.compress == "gzip":
+        return ("gzip", gzip_encode(inpba))
     elif cmdargs.compress == "deflate":
-        result = defl_data
+        return ("deflate", deflate_encode(inpba))
+    elif cmdargs.compress == "brotli":
+        return ("br", brotli_encode(inpba))
     else:
-        result = gzip_data
-    return (type,result)
+        raise Exception(f"Unknown compression algorithm: {cmdargs.compress}")
 
 
 def emitDataFieldDecl(prologue, data):

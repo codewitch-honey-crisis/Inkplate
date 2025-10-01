@@ -5,6 +5,11 @@ import os
 from glob import glob
 import subprocess
 import shutil
+import sys
+try:
+    import brotli
+except ImportError:
+    print("brotli module unavailable, falling back to deflate/gzip", file=sys.stderr)
 
 # Determine Python command once at startup
 PYTHON_CMD = "python3" if shutil.which("python3") else "python"
