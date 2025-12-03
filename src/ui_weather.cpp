@@ -15,6 +15,7 @@
 #include "json.hpp"
 #include "rtc_time.h"
 #include "timing.h"
+#include "log.h"
 #if defined(INKPLATE10) || defined(INKPLATE10V2)
 #include "inkplate10/power.h"
 #endif
@@ -481,7 +482,9 @@ long ui_weather_fetch() {
         http_end(handle);
         if (success) {
             uint32_t fetch_time_ms = timing_get_ms() - start_ts;
+            log_timestamp();
             printf("Weather fetch time: %ldms\n", (long)fetch_time_ms);
+            log_timestamp();
             puts("Fetching time information");
             strcpy(time_api_url,time_api_url_part);
             strcat(time_api_url,weather_timezone);
@@ -509,6 +512,7 @@ long ui_weather_fetch() {
                             } 
                         }
                     }
+                    log_timestamp();
                     printf("Fetched time info in %ldms\n",(long)(timing_get_ms()-time_fetch_time_start_ts));
                 }
                 http_end(handle);
@@ -518,6 +522,7 @@ long ui_weather_fetch() {
                 if(is_dst){
                     offs+=dst_offs;
                 }
+                log_timestamp();
                 puts("Retrieved UTC offset for current timezone");
                 if(now!=0) {
                     result = (last_updated+(15*60))-now;
@@ -631,8 +636,10 @@ long ui_weather_fetch() {
                 }
             }
             uint32_t ui_start_ts = timing_get_ms();
+            log_timestamp();
             puts("UI update started");
             weather_screen.update();
+            log_timestamp();
             printf("UI updated in %0.2f seconds\n", (long)(timing_get_ms() - ui_start_ts)/1000.f);
             return result;
         }

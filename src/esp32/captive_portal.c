@@ -122,7 +122,7 @@ size_t captive_portal_get_ap_list_size() {
     return wifi_ap_info_size;
 }
 const char* captive_portal_get_ap_list_ssid(size_t index) {
-    if(index<0 || index > wifi_ap_info_size) {
+    if(index >= wifi_ap_info_size) {
         return NULL;
     }
     return (const char*)wifi_ap_info[index].ssid;
