@@ -229,7 +229,7 @@ bool ui_weather_init() {
     sr.offset_inplace(margin, 0);
     sr.x2 -= (margin * .5f);
     weather_temp_title_label.bounds(sr);
-    weather_temp_title_label.background_round({bradius, bradius});
+    weather_temp_title_label.radiuses({bradius, bradius});
     weather_temp_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
     weather_temp_title_label.font(text_font);
     weather_temp_title_label.color(ucolor_t::white);
@@ -241,7 +241,7 @@ bool ui_weather_init() {
     sr.offset_inplace(sr.width() + margin, 0);
     sr.x2 -= (margin * 2);
     weather_wind_title_label.bounds(sr);
-    weather_wind_title_label.background_round({bradius, bradius});
+    weather_wind_title_label.radiuses({bradius, bradius});
     weather_wind_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
     weather_wind_title_label.font(text_font);
     weather_wind_title_label.color(ucolor_t::white);
@@ -271,7 +271,7 @@ bool ui_weather_init() {
     sr = weather_temp_title_label.bounds();
     sr.offset_inplace(0, (sr.height() * 2) + (fheight / 2));
     weather_precipitation_title_label.bounds(sr);
-    weather_precipitation_title_label.background_round({bradius, bradius});
+    weather_precipitation_title_label.radiuses({bradius, bradius});
     weather_precipitation_title_label.text("PRECIPITATION");
     weather_precipitation_title_label.font(text_font);
     weather_precipitation_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
@@ -283,7 +283,7 @@ bool ui_weather_init() {
     sr.offset_inplace(sr.width() + margin, 0);
     sr.x2 -= (margin * 2);
     weather_humidity_title_label.bounds(sr);
-    weather_humidity_title_label.background_round({bradius, bradius});
+    weather_humidity_title_label.radiuses({bradius, bradius});
     weather_humidity_title_label.text("HUMIDITY");
     weather_humidity_title_label.font(text_font);
     weather_humidity_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
@@ -314,7 +314,7 @@ bool ui_weather_init() {
     sr = weather_precipitation_title_label.bounds();
     sr.offset_inplace(0, (sr.height() * 2) + (fheight / 2));
     weather_visibility_title_label.bounds(sr);
-    weather_visibility_title_label.background_round({bradius, bradius});
+    weather_visibility_title_label.radiuses({bradius, bradius});
     weather_visibility_title_label.text("VISIBILITY");
     weather_visibility_title_label.font(text_font);
     weather_visibility_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
@@ -326,7 +326,7 @@ bool ui_weather_init() {
     sr.offset_inplace(sr.width() + margin, 0);
     sr.x2 -= (margin * 2);
     weather_pressure_title_label.bounds(sr);
-    weather_pressure_title_label.background_round({bradius, bradius});
+    weather_pressure_title_label.radiuses({bradius, bradius});
     weather_pressure_title_label.text("PRESSURE");
     weather_pressure_title_label.font(text_font);
     weather_pressure_title_label.background_color(rgba_pixel<32>(L, L, L, 255));
