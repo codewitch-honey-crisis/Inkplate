@@ -4,7 +4,7 @@ import sys
 IS_WINDOWS = sys.platform.startswith("win")
 IS_LINUX = sys.platform.startswith("linux")
 IS_MAC = sys.platform.startswith("darwin")
-
+python_exe = sys.executable
 print("React+TS integration enabled")
 if (IS_WINDOWS):
     env.Execute("build_react.cmd")
@@ -14,7 +14,10 @@ else:
 
 print("ClASP Suite integration enabled")
 
-#env.Execute("dotnet ./build_tools/clasptree.dll ./react-web/dist ./common/include/httpd_content.h --prefix httpd_ --epilogue ./common/include/httpd_epilogue.h --state context --block httpd_send_block --expr httpd_send_expr --handlers extended")
-import shutil
-python_cmd = "python3" if shutil.which("python3") else "python"
-env.Execute(f"{python_cmd} clasptree.py ./react-web/dist -o ./include/httpd_content.h -p httpd_ -E ./include/httpd_epilogue.h -s context -b httpd_send_block -e httpd_send_expr -H extended")
+#import shutil
+#python_cmd = "python3" if shutil.which("python3") else "python"
+#env.Execute(f"{python_cmd} clasptree.py ./react-web/dist -o ./include/httpd_content.h -p httpd_ -E ./include/httpd_epilogue.h -s context -b httpd_send_block -e httpd_send_expr -H extended")
+#import subprocess
+#subprocess.check_call([python_exe, "clasptree.py", "./react-web/dist", "-o", "./include/httpd_content.h", "-p", "httpd_", "-E", "./include/httpd_epilogue.h", "-s", "context", "-b", "httpd_send_block", "-e", "httpd_send_expr", "-H", "extended"])
+#import shutil
+#env.Execute(f"$PYTHONEXE clasptree.py ./react-web/dist -o ./include/httpd_content.h -p httpd_ -E ./include/httpd_epilogue.h -s context -b httpd_send_block -e httpd_send_expr -H extended")
