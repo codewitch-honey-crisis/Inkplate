@@ -54,10 +54,13 @@ extern "C" void run(void) {
     log_timestamp();
     printf("Update starting. Free RAM: %0.2fKB\n", esp_get_free_heap_size() / 1024.f);
 #endif
-    
+    log_timestamp();
+    puts("Initializeing internal storage");
     if (!fs_internal_init()) {
         puts("FS init failed");
     }
+    log_timestamp();
+    puts("Initializeing display");
     if (!display_init()) {
         puts("Display init failed");
         return;
@@ -71,11 +74,15 @@ extern "C" void run(void) {
             puts("Warning: Screen wash failed. Continuing...");
         }
     }
-
+    log_timestamp();
+    puts("Initializeing real-time clock");
     if (!rtc_time_init()) {
         puts("RTC init failed");
         return;
     }
+    log_timestamp();
+    puts("Connecting to network");
+    
     if (!start_portal && net_init_async()) {
         net_start_ts = timing_get_ms();
         while (net_status() == NET_WAITING) {
