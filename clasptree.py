@@ -4,6 +4,15 @@ from urllib.parse import quote
 import os
 from glob import glob
 import subprocess
+import shutil
+import sys
+try:
+    import brotli
+except ImportError:
+    print("brotli module unavailable, falling back to deflate/gzip", file=sys.stderr)
+
+# Determine Python command once at startup
+PYTHON_CMD = "python3" if shutil.which("python3") else "python"
 line = 1
 firstEmit = 1
 indent = ""
@@ -756,7 +765,7 @@ def run():
                 ext = f[1][exti:]
             emit(f"void {cmdargs.prefix}content_{f[0]}(void* {cmdargs.state}) {{{eol}")
             if ext.lower() == ".clasp":
-                cmd = ["python","clasp.py"]
+                cmd = [PYTHON_CMD,"clasp.py"]
                 cmd.append(f"{f[1]}")
                 cmd.append(f"-l unix")
                 cmd.append(f"-b {cmdargs.block}")
@@ -778,7 +787,7 @@ def run():
                 else:
                     indent = oldindent
             else:
-                cmd = ["python","clstat.py"]
+                cmd = [PYTHON_CMD,"clstat.py"]
                 cmd.append(f"{f[1]}")
                 cmd.append("-S 200")
                 cmd.append("-T OK")

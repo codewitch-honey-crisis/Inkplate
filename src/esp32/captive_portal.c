@@ -274,11 +274,11 @@ static void parse_url_and_apply(const char* url) {
             }
             if(0==strcmp("ssid",name)) {
                 set_creds=true;
-                strncpy(ssid,value,63);
+                httpd_url_decode(ssid,sizeof(ssid),value);
             }
             if(0==strcmp("pass",name)) {
                 set_creds = true;
-                strncpy(pass,value,63);
+                httpd_url_decode(pass,sizeof(pass),value);
             }
             if(0==strcmp("tz",name)) {
                 set_tz=true;

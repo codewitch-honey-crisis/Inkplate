@@ -29,21 +29,7 @@ static uint32_t net_start_ts=0;
 char ssid[65];
 char pass[129];
 char address[129];
-static task_mutex_t dhcp_mutex;
-static int dhcp_connected = 0;
-static int dhcp_connected_old = -1;
 static bool start_portal = false;
-static void portal_on_connect(void* state) {
-    task_mutex_lock(dhcp_mutex,-1);
-    dhcp_connected = 1;
-    task_mutex_unlock(dhcp_mutex);
-
-}
-static void portal_on_disconnect(void* state) {
-    task_mutex_lock(dhcp_mutex,-1);
-    dhcp_connected = 0;
-    task_mutex_unlock(dhcp_mutex);
-}
 #endif
 static void on_wash_complete(void* state) {
     printf("Screen wash complete in %0.2f seconds\n",(timing_get_ms()-wash_start_ts)/1000.f);
@@ -101,13 +87,6 @@ extern "C" void run(void) {
     if(net_status()!=NET_CONNECTED) {
         net_end();
 #ifdef ESP_PLATFORM
-        dhcp_mutex = task_mutex_init();
-        if(dhcp_mutex==nullptr) {
-            puts("Could not initialize DHCP mutex");
-            return;
-        }
-        captive_portal_on_sta_connect(portal_on_connect,nullptr);
-        captive_portal_on_sta_disconnect(portal_on_disconnect,nullptr);
         if(!captive_portal_init()) {
             puts("Error initializing captive portal");
             return;        
@@ -128,24 +107,11 @@ extern "C" void run(void) {
             puts("ui update failed");
             return;
         }
+        puts("captive portal awaiting configuration");
         while(true) {
             rtc_wdt_feed();
-            task_delay(5);
-            int conn = dhcp_connected;
-            if(conn!=dhcp_connected_old) {
-                dhcp_connected_old  = conn;
-                if(conn) {
-                    if(!ui_captive_portal_set_configure(address)) {
-                        puts("ui update failed");
-                        return;
-                    }
-                } else {
-                    if(!ui_captive_portal_set_ap(address,ssid,pass)) {
-                        puts("ui update failed");
-                        return;
-                    }
-                }
-            }
+            // server will restart us on receipt of config values.
+            task_delay(1000);
         }
     
 #else
