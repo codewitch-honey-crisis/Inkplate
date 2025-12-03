@@ -527,12 +527,17 @@ long ui_weather_fetch() {
                 if(now!=0) {
                     result = (last_updated+(15*60))-now;
                     now = (time_t)(((long long)now)+offs);
+                    log_timestamp();
                     puts("Adjusted retrieval time with current local time");
+                    log_timestamp();
                     printf("Weather API reported time is: %s",asctime(localtime(&weather_api_time)));
+                    log_timestamp();
                     printf("Current local time is: %s",asctime(localtime(&now)));
                     if(rtc_time_set(localtime(&now))) {
+                        log_timestamp();
                         puts("Synced RTC clock to local time");
                     } else {
+                        log_timestamp();
                         puts("Failed attempting to sync RTC clock to local time");
                     }
                 }
