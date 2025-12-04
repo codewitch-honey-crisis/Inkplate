@@ -190,9 +190,13 @@ extern "C" void loop(void) {
                 log_time((unsigned long)(timing_get_ms() - start_ts));
                 puts("");
             }
-#ifdef INKPLATE10V2
+#ifdef ESP_PLATFORM
             log_timestamp();
-            printf("Update finished. Free RAM: %0.2fKB\n", esp_get_free_heap_size() / 1024.f);
+            printf("Free RAM: %0.2fKB\n", esp_get_free_heap_size() / 1024.f);
+#endif
+            log_timestamp();
+            puts("Update finished.");
+#ifdef INKPLATE10V2
             log_timestamp();
             puts("Sleeping");
             esp_sleep_enable_ext0_wakeup((gpio_num_t)BUTTON_A, 0);
