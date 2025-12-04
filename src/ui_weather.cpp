@@ -481,14 +481,16 @@ long ui_weather_fetch() {
         }
         http_end(handle);
         if (success) {
+            log_timestamp();
+            puts("Fetching weather information");
             uint32_t fetch_time_ms = timing_get_ms() - start_ts;
             log_timestamp();
             printf("Weather fetch time: %ldms\n", (long)fetch_time_ms);
-            log_timestamp();
-            puts("Fetching time information");
             strcpy(time_api_url,time_api_url_part);
             strcat(time_api_url,weather_timezone);
             uint32_t time_fetch_time_start_ts = timing_get_ms();
+            log_timestamp();
+            puts("Fetching time information");
             handle = http_init(time_api_url);
             long offs = -1;            
             long dst_offs;
@@ -514,8 +516,14 @@ long ui_weather_fetch() {
                     }
                     log_timestamp();
                     printf("Fetched time info in %ldms\n",(long)(timing_get_ms()-time_fetch_time_start_ts));
+                } else {
+                    log_timestamp();
+                    puts("Error fetching time information, HTTP status");
                 }
                 http_end(handle);
+            } else {
+                log_timestamp();
+                puts("Error fetching time information, HTTP init");
             }
             long result = (last_updated + (15 * 60)) - weather_api_time;
             if(offs!=-1) {
