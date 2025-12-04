@@ -34,7 +34,9 @@ static bool start_portal = false;
 #endif
 static void on_wash_complete(void* state) {
     log_timestamp();
-    printf("Screen wash complete in %0.2f seconds\n", (timing_get_ms() - wash_start_ts) / 1000.f);
+    fputs("Screen wash complete in ",stdout);
+    log_time((unsigned long)(timing_get_ms() - wash_start_ts));
+    puts("");
 }
 static uint32_t fetch_ts = 0;
 
@@ -143,7 +145,9 @@ extern "C" void loop(void) {
     if (net_status() == NET_CONNECTED) {
         if (net_start_ts != 0) {
             log_timestamp();
-            printf("Network connected in %0.2f seconds\n", (timing_get_ms() - net_start_ts) / 1000.f);
+            fputs("Network connected in ",stdout);
+            log_time((unsigned long)(timing_get_ms() - net_start_ts));
+            puts("");
             net_start_ts = 0;
         }
         if (fetch_ts == 0 || timing_get_ms() >= fetch_ts + next_update * 1000) {
@@ -171,14 +175,20 @@ extern "C" void loop(void) {
             puts("Begin display panel transfer");
             if (display_update_8bit()) {
                 log_timestamp();
-                printf("Display panel transfer complete in %0.2f seconds. Turning off display.\n", (long)(timing_get_ms() - transfer_ts) / 1000.f);
+                fputs("Display panel transfer complete in ",stdout);
+                log_time((unsigned long)(timing_get_ms() - transfer_ts));
+                puts("");
+                log_timestamp();
+                puts("Turning off display");
                 display_sleep();
             }
             if (!next_update) {
                 puts("Could not fetch weather");
             } else {
                 log_timestamp();
-                printf("Update completed in %0.2f seconds\n", (timing_get_ms() - start_ts) / 1000.f);
+                fputs("Update completed in ",stdout);
+                log_time((unsigned long)(timing_get_ms() - start_ts));
+                puts("");
             }
 #ifdef INKPLATE10V2
             log_timestamp();

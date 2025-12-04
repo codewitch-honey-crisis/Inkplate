@@ -5,6 +5,8 @@ extern "C" {
 #endif
 /// @brief Emits the timestamp
 void log_timestamp(void);
+/// @brief Emits the time marker
+void log_time(unsigned long ms);
 #ifdef __cplusplus
 }
 #endif

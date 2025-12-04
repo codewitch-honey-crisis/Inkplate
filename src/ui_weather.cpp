@@ -485,7 +485,9 @@ long ui_weather_fetch() {
             puts("Fetching weather information");
             uint32_t fetch_time_ms = timing_get_ms() - start_ts;
             log_timestamp();
-            printf("Weather fetch time: %ldms\n", (long)fetch_time_ms);
+            fputs("Weather fetched in ",stdout);
+            log_time((unsigned long)fetch_time_ms);
+            puts("");
             strcpy(time_api_url,time_api_url_part);
             strcat(time_api_url,weather_timezone);
             uint32_t time_fetch_time_start_ts = timing_get_ms();
@@ -515,7 +517,9 @@ long ui_weather_fetch() {
                         }
                     }
                     log_timestamp();
-                    printf("Fetched time info in %ldms\n",(long)(timing_get_ms()-time_fetch_time_start_ts));
+                    fputs("Fetched time info in ",stdout);
+                    log_time((unsigned long)(timing_get_ms()-time_fetch_time_start_ts));
+                    puts("");
                 } else {
                     log_timestamp();
                     puts("Error fetching time information, HTTP status");
@@ -653,7 +657,9 @@ long ui_weather_fetch() {
             puts("UI update started");
             weather_screen.update();
             log_timestamp();
-            printf("UI updated in %0.2f seconds\n", (long)(timing_get_ms() - ui_start_ts)/1000.f);
+            fputs("UI updated in ",stdout);
+            log_time((unsigned long)(timing_get_ms() - ui_start_ts));
+            puts("");
             return result;
         }
         return -1;
