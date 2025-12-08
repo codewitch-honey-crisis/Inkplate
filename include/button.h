@@ -2,10 +2,10 @@
 #define BUTTON_H
 #include <stdbool.h>
 #include <stddef.h>
-typedef void(*button_on_press_changed_callback_t)(bool pressed, void* state);
 #ifdef __cplusplus
 extern "C" {
 #endif
+typedef void(*button_on_press_changed_callback_t)(bool pressed, void* state);
 /// @brief Initializes the button
 /// @return True if successful, otherwise false
 bool button_init(void);

@@ -4,15 +4,15 @@
 #include <stdint.h>
 #define TASK_AFFINITY_ANY (-1)
 #define TASK_STACK_DEFAULT (2048)
+#ifdef __cplusplus
+extern "C" {
+#endif
 /// @brief The handle for a task
 typedef void* task_t;
 /// @brief The handle for a mutex
 typedef void* task_mutex_t;
 /// @brief The method for a task
 typedef void(*task_fn_t)(void* arg);
-#ifdef __cplusplus
-extern "C" {
-#endif
 /// @brief Creates a new task
 /// @param task The function to handle the task
 /// @param stack_size The stack size, in bytes or TASK_STACK_DEFAULT

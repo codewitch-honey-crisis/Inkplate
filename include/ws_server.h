@@ -9,6 +9,10 @@
 #include "esp_http_server.h"
 #include "esp_netif_ip_addr.h"
 #endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 /// @brief Indicates the type of websocket frame
 typedef enum {
     WS_SRV_TYPE_CONTINUE   = 0x0,
@@ -43,10 +47,6 @@ typedef struct {
     /// @brief The payload data
     uint8_t *payload;          
 } ws_srv_frame_t;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 #ifndef ESP_PLATFORM
 /// @brief Computes a websocket sec response code
 /// @param ws_sec The key from the HTTP header

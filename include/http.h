@@ -1,13 +1,14 @@
 #ifndef HTTP_H
 #define HTTP_H
 #include <stddef.h>
-typedef void* http_handle_t;
-extern char http_enc_rfc3986[];
-extern char http_enc_html5[];
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+typedef void* http_handle_t;
+extern char http_enc_rfc3986[];
+extern char http_enc_html5[];
+
 /// @brief Initializes an HTTP session with an URL
 /// @param url The URL endpoint
 /// @return A handle for the HTTP session

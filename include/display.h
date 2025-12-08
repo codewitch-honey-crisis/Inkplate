@@ -18,10 +18,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-typedef void(*display_on_wash_complete_callback_t)(void*state);
 #ifdef __cplusplus
 extern "C" {
 #endif
+typedef void(*display_on_wash_complete_callback_t)(void*state);
 /// @brief Initializes the display
 /// @return True if successful, otherwise false
 bool display_init(void);

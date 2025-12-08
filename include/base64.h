@@ -3,6 +3,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /// @brief Reads a byte from the input stream. Returns the byte, or -1 if no more data
 typedef int(*base64_on_read_callback)(void*);
 
@@ -24,10 +27,6 @@ typedef struct {
         };
     };
 } base64_context_t;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 /// @brief Initializes the base64 context
 /// @param on_read The method that reads from the input
 /// @param on_read_state The user defined state value to pass to the read function

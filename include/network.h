@@ -2,10 +2,10 @@
 #define NETWORK_H
 #include <stdbool.h>
 #include <stddef.h>
-typedef enum { NET_UNINITIALIZED=-1, NET_WAITING, NET_CONNECTED, NET_CONNECT_FAILED } net_status_t;
 #ifdef __cplusplus
 extern "C" {
 #endif
+typedef enum { NET_UNINITIALIZED=-1, NET_WAITING, NET_CONNECTED, NET_CONNECT_FAILED } net_status_t;
 /// @brief Begins initializing the network
 /// @return true on success, false on error
 bool net_init_async(void);
